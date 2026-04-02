@@ -95,6 +95,19 @@ export class BerletetComponent implements OnInit {
     await this.loadData();
   }
 
+  async adjustSessions(m: MembershipWithProfile, delta: number) {
+    const newRemaining = Math.max(0, m.remaining_sessions + delta);
+    const newTotal = delta > 0
+      ? Math.max(m.total_sessions, newRemaining)
+      : m.total_sessions;
+    await this.supabase.updateMembership(m.id, {
+      remaining_sessions: newRemaining,
+      total_sessions: newTotal,
+    });
+    m.remaining_sessions = newRemaining;
+    m.total_sessions = newTotal;
+  }
+
   resetForm() {
     this.newBerlet = {
       user_id: '',

@@ -151,21 +151,28 @@ export class SupabaseService {
     return data ?? [];
   }
 
-  async bookSession(sessionId: string) {
-    if (this.isMockMode) return null;
-    const { data: session } = await this.supabase!
-      .from('training_sessions')
-      .select('current_bookings')
-      .eq('id', sessionId)
-      .maybeSingle();
+  async bookSession(sessionId: string, userId: string) {
+    if (this.isMockMode) return { error: null };
 
-    if (session) {
-      return this.supabase!
-        .from('training_sessions')
-        .update({ current_bookings: session.current_bookings + 1 })
-        .eq('id', sessionId);
-    }
-    return null;
+    // Use the SECURITY DEFINER RPC function for atomic booking
+    const { data, error } = await this.supabase!.rpc('book_training_session', {
+      p_session_id: sessionId,
+      p_user_id: userId,
+    });
+
+    if (error) return { error: { message: error.message } };
+    if (data?.error) return { error: { message: data.error } };
+    return { error: null };
+  }
+
+  async getUserBookingsForDate(userId: string, date: string): Promise<string[]> {
+    if (this.isMockMode) return [];
+    const { data } = await this.supabase!
+      .from('bookings')
+      .select('session_id')
+      .eq('user_id', userId)
+      .eq('booking_date', date);
+    return (data ?? []).map((b: any) => b.session_id);
   }
 
   // Bérletek (Memberships/Passes)
@@ -188,6 +195,14 @@ export class SupabaseService {
     return this.supabase!
       .from('memberships')
       .update({ remaining_sessions: currentRemaining - 1 })
+      .eq('id', membershipId);
+  }
+
+  async setMembershipSessions(membershipId: string, remaining: number) {
+    if (this.isMockMode) return { error: null };
+    return this.supabase!
+      .from('memberships')
+      .update({ remaining_sessions: remaining })
       .eq('id', membershipId);
   }
 

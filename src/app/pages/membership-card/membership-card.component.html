@@ -1,5 +1,10 @@
 <div class="card-page">
   <header class="header">
+    @if (isViewingOther) {
+      <button class="back-btn" (click)="goBack()">
+        <span class="material-icons">arrow_back</span>
+      </button>
+    }
     <div class="logo">
       <span class="material-icons">shield</span>
       <span class="brand">DHKSE</span>
@@ -16,11 +21,17 @@
         <p>Betöltés...</p>
       </div>
     } @else {
-    <h2>Tagsági Kártya</h2>
+    <h2>{{ isViewingOther ? 'Tag Profil' : 'Tagsági Kártya' }}</h2>
 
     <div class="membership-card">
       <div class="card-header">
-        <img [src]="profile?.avatar_url" [alt]="profile?.full_name" class="avatar" />
+        @if (profile?.avatar_url) {
+          <img [src]="profile?.avatar_url" [alt]="profile?.full_name" class="avatar" />
+        } @else {
+          <div class="avatar-placeholder">
+            <span class="material-icons">person</span>
+          </div>
+        }
         <span class="status-badge" [class.active]="membership?.status === 'active'" [class.expired]="membership?.status !== 'active'">
           {{ membership?.status === 'active' ? 'AKTÍV' : 'LEJÁRT' }}
         </span>
@@ -33,10 +44,14 @@
       </div>
 
       <div class="qr-section">
-        <div class="qr-placeholder">
-          <span class="material-icons">qr_code_2</span>
-          <p>Érintse az olvasóhoz</p>
-        </div>
+        @if (qrDataUrl) {
+          <img [src]="qrDataUrl" alt="QR kód" class="qr-image" />
+        } @else {
+          <div class="qr-placeholder">
+            <span class="material-icons">qr_code_2</span>
+            <p>Érintse az olvasóhoz</p>
+          </div>
+        }
       </div>
 
       <div class="card-stats">
@@ -57,6 +72,31 @@
         </div>
       </div>
     </div>
+
+    <!-- Admin controls for membership -->
+    @if (isAdmin && membership) {
+      <div class="admin-controls">
+        <h3>Bérlet kezelés</h3>
+        <div class="sessions-control">
+          <span class="control-label">Hátralévő alkalmak: <strong>{{ membership.remaining_sessions }}</strong></span>
+          <div class="control-buttons">
+            <button class="control-btn minus" (click)="adjustSessions(-1)" [disabled]="membership.remaining_sessions <= 0">
+              <span class="material-icons">remove</span>
+            </button>
+            <button class="control-btn plus" (click)="adjustSessions(1)">
+              <span class="material-icons">add</span>
+            </button>
+          </div>
+        </div>
+        <div class="status-control">
+          <span class="control-label">Státusz</span>
+          <button class="toggle-status-btn" [class]="membership.status" (click)="toggleMembershipStatus()">
+            <span class="material-icons">{{ membership.status === 'active' ? 'toggle_on' : 'toggle_off' }}</span>
+            {{ membership.status === 'active' ? 'Aktív' : 'Lejárt' }}
+          </button>
+        </div>
+      </div>
+    }
     }
   </section>
 
@@ -66,7 +106,7 @@
     @if (recentSessions.length === 0) {
       <div class="empty-hint">
         <span class="material-icons">info</span>
-        <p>Még nincs rögzített edzésed.</p>
+        <p>Még nincs rögzített edzés.</p>
       </div>
     } @else {
       @for (session of recentSessions; track session.date) {
@@ -83,22 +123,43 @@
     }
   </section>
 
-  <nav class="bottom-nav">
-    <a routerLink="/membership-card" class="nav-item active">
-      <span class="material-icons">home</span>
-      <span>Főoldal</span>
-    </a>
-    <a routerLink="/berletek" class="nav-item">
-      <span class="material-icons">card_membership</span>
-      <span>Bérletek</span>
-    </a>
-    <a routerLink="/training" class="nav-item">
-      <span class="material-icons">fitness_center</span>
-      <span>Edzések</span>
-    </a>
-    <a routerLink="/membership-card" class="nav-item">
-      <span class="material-icons">person</span>
-      <span>Profil</span>
-    </a>
-  </nav>
+  @if (isAdmin) {
+    <nav class="bottom-nav">
+      <a routerLink="/admin" class="nav-item">
+        <span class="material-icons">dashboard</span>
+        <span>Vezérlőpult</span>
+      </a>
+      <a routerLink="/qr-scanner" class="nav-item">
+        <span class="material-icons">qr_code_scanner</span>
+        <span>QR Scan</span>
+      </a>
+      <a routerLink="/members" class="nav-item">
+        <span class="material-icons">group</span>
+        <span>Tagok</span>
+      </a>
+      <a routerLink="/berletek" class="nav-item">
+        <span class="material-icons">card_membership</span>
+        <span>Bérletek</span>
+      </a>
+    </nav>
+  } @else {
+    <nav class="bottom-nav">
+      <a routerLink="/membership-card" class="nav-item active">
+        <span class="material-icons">home</span>
+        <span>Főoldal</span>
+      </a>
+      <a routerLink="/berletek" class="nav-item">
+        <span class="material-icons">card_membership</span>
+        <span>Bérletek</span>
+      </a>
+      <a routerLink="/training" class="nav-item">
+        <span class="material-icons">fitness_center</span>
+        <span>Edzések</span>
+      </a>
+      <a routerLink="/membership-card" class="nav-item">
+        <span class="material-icons">person</span>
+        <span>Profil</span>
+      </a>
+    </nav>
+  }
 </div>

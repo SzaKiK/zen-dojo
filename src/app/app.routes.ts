@@ -10,6 +10,7 @@ export const routes: Routes = [
   { path: 'berletek', canActivate: [authGuard], loadComponent: () => import('./pages/berletek/berletek.component').then(m => m.BerletetComponent) },
   { path: 'admin', canActivate: [adminGuard], loadComponent: () => import('./pages/admin-dashboard/admin-dashboard.component').then(m => m.AdminDashboardComponent) },
   { path: 'members', canActivate: [adminGuard], loadComponent: () => import('./pages/member-list/member-list.component').then(m => m.MemberListComponent) },
+  { path: 'members/:userId', canActivate: [adminGuard], loadComponent: () => import('./pages/membership-card/membership-card.component').then(m => m.MembershipCardComponent) },
   { path: 'qr-scanner', canActivate: [adminGuard], loadComponent: () => import('./pages/qr-scanner/qr-scanner.component').then(m => m.QrScannerComponent) },
   { path: '**', redirectTo: '' }
 ];

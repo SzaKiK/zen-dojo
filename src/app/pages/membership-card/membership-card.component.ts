@@ -1,12 +1,14 @@
 import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { Router, RouterLink } from '@angular/router';
+import { Router, RouterLink, ActivatedRoute } from '@angular/router';
+import { FormsModule } from '@angular/forms';
 import { SupabaseService, Profile, Membership } from '../../services/supabase.service';
+import QRCode from 'qrcode';
 
 @Component({
   selector: 'app-membership-card',
   standalone: true,
-  imports: [CommonModule, RouterLink],
+  imports: [CommonModule, RouterLink, FormsModule],
   templateUrl: './membership-card.component.html',
   styleUrl: './membership-card.component.scss',
 })
@@ -15,6 +17,10 @@ export class MembershipCardComponent implements OnInit {
   membership: Membership | null = null;
   recentSessions: { title: string; date: string }[] = [];
   loading = true;
+  qrDataUrl = '';
+  isAdmin = false;
+  isViewingOther = false;
+  currentUserId = '';
 
   // Demo data for display when Supabase is not configured
   demoProfile: Profile = {
@@ -36,12 +42,28 @@ export class MembershipCardComponent implements OnInit {
     status: 'active',
   };
 
-  constructor(private supabase: SupabaseService, private router: Router) {}
+  constructor(
+    private supabase: SupabaseService,
+    private router: Router,
+    private route: ActivatedRoute
+  ) {}
 
   async ngOnInit() {
     const { data } = await this.supabase.getSession();
     if (data?.session?.user) {
-      this.profile = await this.supabase.getProfile(data.session.user.id);
+      this.currentUserId = data.session.user.id;
+      const currentProfile = await this.supabase.getProfile(data.session.user.id);
+      this.isAdmin = currentProfile?.is_admin ?? false;
+
+      // Check if viewing another user's profile (admin feature)
+      const targetUserId = this.route.snapshot.paramMap.get('userId');
+      if (targetUserId && this.isAdmin && targetUserId !== this.currentUserId) {
+        this.isViewingOther = true;
+        this.profile = await this.supabase.getProfile(targetUserId);
+      } else {
+        this.profile = currentProfile;
+      }
+
       if (this.profile) {
         this.membership = await this.supabase.getMembership(this.profile.id);
         const attendance = await this.supabase.getUserAttendance(this.profile.id, 5);
@@ -53,6 +75,17 @@ export class MembershipCardComponent implements OnInit {
             hour: '2-digit', minute: '2-digit',
           }),
         }));
+
+        // Generate QR code
+        if (this.profile.qr_code_id) {
+          try {
+            this.qrDataUrl = await QRCode.toDataURL(this.profile.qr_code_id, {
+              width: 140,
+              margin: 1,
+              color: { dark: '#0a0a1a', light: '#ffffff' },
+            });
+          } catch { /* QR generation failed, show placeholder */ }
+        }
       }
     }
 
@@ -67,6 +100,31 @@ export class MembershipCardComponent implements OnInit {
   async logout() {
     await this.supabase.signOut();
     this.router.navigate(['/']);
+  }
+
+  goBack() {
+    this.router.navigate(['/members']);
+  }
+
+  async adjustSessions(delta: number) {
+    if (!this.membership || !this.isAdmin) return;
+    const newRemaining = Math.max(0, this.membership.remaining_sessions + delta);
+    const newTotal = delta > 0
+      ? Math.max(this.membership.total_sessions, newRemaining)
+      : this.membership.total_sessions;
+    await this.supabase.updateMembership(this.membership.id, {
+      remaining_sessions: newRemaining,
+      total_sessions: newTotal,
+    });
+    this.membership.remaining_sessions = newRemaining;
+    this.membership.total_sessions = newTotal;
+  }
+
+  async toggleMembershipStatus() {
+    if (!this.membership || !this.isAdmin) return;
+    const newStatus = this.membership.status === 'active' ? 'expired' : 'active';
+    await this.supabase.updateMembership(this.membership.id, { status: newStatus });
+    this.membership.status = newStatus;
   }
 
   get sessionsUsed(): number {

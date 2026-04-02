@@ -44,8 +44,14 @@
       </div>
     } @else {
       @for (member of filteredMembers; track member.id) {
-        <div class="member-card">
-          <img [src]="member.avatar_url" [alt]="member.full_name" class="member-avatar" />
+        <div class="member-card" (click)="viewMember(member)">
+          @if (member.avatar_url) {
+            <img [src]="member.avatar_url" [alt]="member.full_name" class="member-avatar" />
+          } @else {
+            <div class="member-avatar-placeholder">
+              <span class="material-icons">person</span>
+            </div>
+          }
           <div class="member-info">
             <h3>{{ member.full_name }}</h3>
             <span class="status-badge" [class]="member.status">
@@ -53,6 +59,7 @@
             </span>
             <p class="belt">{{ beltName(member.belt_level) }}</p>
           </div>
+          <span class="material-icons chevron">chevron_right</span>
         </div>
       }
     }

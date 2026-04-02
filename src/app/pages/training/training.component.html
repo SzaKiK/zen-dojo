@@ -64,7 +64,9 @@
               </div>
               <span class="spots-text">{{ session.capacity - session.current_bookings }} / {{ session.capacity }} hely szabad</span>
             </div>
-            @if (session.booked) {
+            @if (isAdmin) {
+              <!-- Admin: read-only view, no booking -->
+            } @else if (session.booked) {
               <button class="book-btn booked" disabled>
                 <span class="material-icons">check</span>
                 Lefoglalva
@@ -84,22 +86,43 @@
     }
   </section>
 
-  <nav class="bottom-nav">
-    <a routerLink="/membership-card" class="nav-item">
-      <span class="material-icons">home</span>
-      <span>Főoldal</span>
-    </a>
-    <a routerLink="/berletek" class="nav-item">
-      <span class="material-icons">card_membership</span>
-      <span>Bérletek</span>
-    </a>
-    <a routerLink="/training" class="nav-item active">
-      <span class="material-icons">fitness_center</span>
-      <span>Edzések</span>
-    </a>
-    <a routerLink="/membership-card" class="nav-item">
-      <span class="material-icons">person</span>
-      <span>Profil</span>
-    </a>
-  </nav>
+  @if (isAdmin) {
+    <nav class="bottom-nav">
+      <a routerLink="/admin" class="nav-item">
+        <span class="material-icons">dashboard</span>
+        <span>Vezérlőpult</span>
+      </a>
+      <a routerLink="/qr-scanner" class="nav-item">
+        <span class="material-icons">qr_code_scanner</span>
+        <span>QR Scan</span>
+      </a>
+      <a routerLink="/members" class="nav-item">
+        <span class="material-icons">group</span>
+        <span>Tagok</span>
+      </a>
+      <a routerLink="/berletek" class="nav-item">
+        <span class="material-icons">card_membership</span>
+        <span>Bérletek</span>
+      </a>
+    </nav>
+  } @else {
+    <nav class="bottom-nav">
+      <a routerLink="/membership-card" class="nav-item">
+        <span class="material-icons">home</span>
+        <span>Főoldal</span>
+      </a>
+      <a routerLink="/berletek" class="nav-item">
+        <span class="material-icons">card_membership</span>
+        <span>Bérletek</span>
+      </a>
+      <a routerLink="/training" class="nav-item active">
+        <span class="material-icons">fitness_center</span>
+        <span>Edzések</span>
+      </a>
+      <a routerLink="/membership-card" class="nav-item">
+        <span class="material-icons">person</span>
+        <span>Profil</span>
+      </a>
+    </nav>
+  }
 </div>

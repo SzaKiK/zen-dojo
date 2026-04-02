@@ -122,7 +122,19 @@
                 <div class="bar-track">
                   <div class="bar-fill" [style.width.%]="m.total_sessions > 0 ? (m.remaining_sessions / m.total_sessions) * 100 : 0"></div>
                 </div>
-                <span class="bar-label">{{ m.remaining_sessions }} / {{ m.total_sessions }} alkalom</span>
+                <div class="bar-row">
+                  <span class="bar-label">{{ m.remaining_sessions }} / {{ m.total_sessions }} alkalom</span>
+                  @if (isAdmin) {
+                    <div class="session-adjust">
+                      <button class="adj-btn minus" (click)="adjustSessions(m, -1)" [disabled]="m.remaining_sessions <= 0">
+                        <span class="material-icons">remove</span>
+                      </button>
+                      <button class="adj-btn plus" (click)="adjustSessions(m, 1)">
+                        <span class="material-icons">add</span>
+                      </button>
+                    </div>
+                  }
+                </div>
               </div>
             }
 

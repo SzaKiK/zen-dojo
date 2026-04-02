@@ -29,11 +29,26 @@ export class TrainingComponent implements OnInit {
   loading = true;
   feedbackMsg = '';
   feedbackType: 'success' | 'error' = 'success';
+  isAdmin = false;
+  currentUserId = '';
 
   constructor(private supabase: SupabaseService, private router: Router) {}
 
   async ngOnInit() {
+    const { data } = await this.supabase.getSession();
+    if (data?.session?.user) {
+      this.currentUserId = data.session.user.id;
+      const profile = await this.supabase.getProfile(data.session.user.id);
+      this.isAdmin = profile?.is_admin ?? false;
+    }
+
     const dbSessions = await this.supabase.getTrainingSessions();
+
+    // Load user's bookings for today
+    const today = new Date().toISOString().split('T')[0];
+    const bookedIds = this.currentUserId
+      ? await this.supabase.getUserBookingsForDate(this.currentUserId, today)
+      : [];
 
     if (dbSessions.length > 0) {
       const grouped: Record<string, DisplaySession[]> = {};
@@ -47,7 +62,7 @@ export class TrainingComponent implements OnInit {
           time: `${startStr} - ${endStr}`,
           levelClass: this.getLevelClass(s.level),
           dojo: s.instructor_name.includes('Rácz') ? 'Senshi Usagi, Tabajd' : 'Dojo Metzger, Bicske',
-          booked: false,
+          booked: bookedIds.includes(s.id),
           booking: false,
           full: spots <= 0,
         };
@@ -69,20 +84,20 @@ export class TrainingComponent implements OnInit {
   }
 
   async bookSession(session: DisplaySession) {
-    if (session.booked || session.booking || session.full) return;
+    if (session.booked || session.booking || session.full || this.isAdmin) return;
     session.booking = true;
     this.feedbackMsg = '';
 
-    const result = await this.supabase.bookSession(session.id);
+    const result = await this.supabase.bookSession(session.id, this.currentUserId);
     session.booking = false;
 
-    if (result && !(result as any).error) {
+    if (result && !result.error) {
       session.booked = true;
       session.current_bookings++;
       session.full = session.current_bookings >= session.capacity;
       this.showFeedback('Sikeresen foglaltál!', 'success');
     } else {
-      this.showFeedback('Hiba a foglalásnál. Próbáld újra.', 'error');
+      this.showFeedback(result?.error?.message ?? 'Hiba a foglalásnál. Próbáld újra.', 'error');
     }
   }
 

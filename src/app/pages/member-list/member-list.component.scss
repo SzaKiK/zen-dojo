@@ -86,6 +86,20 @@
       border: 2px solid #2a2a4a;
     }
 
+    .member-avatar-placeholder {
+      width: 52px; height: 52px;
+      border-radius: 50%;
+      border: 2px solid #2a2a4a;
+      background: #1e1e3e;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+      .material-icons { font-size: 28px; color: #4a4a6a; }
+    }
+
+    .chevron { color: #3a3a5a; }
+
     .member-info {
       flex: 1;
 

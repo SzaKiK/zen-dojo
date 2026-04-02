@@ -2,7 +2,7 @@ import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { Router, RouterLink } from '@angular/router';
-import { SupabaseService, Profile } from '../../services/supabase.service';
+import { SupabaseService, Profile, Membership } from '../../services/supabase.service';
 
 @Component({
   selector: 'app-member-list',
@@ -55,10 +55,18 @@ export class MemberListComponent implements OnInit {
   async ngOnInit() {
     const profiles = await this.supabase.getAllProfiles();
     if (profiles.length > 0) {
-      this.members = profiles.map((p) => ({ ...p, status: 'active' }));
+      const memberships = await this.supabase.getAllMemberships();
+      this.members = profiles.map((p) => {
+        const m = memberships.find(mb => mb.user_id === p.id);
+        return { ...p, status: m?.status === 'active' ? 'active' : (m ? 'expired' : 'active') };
+      });
     } else {
       this.members = this.demoMembers;
     }
+  }
+
+  viewMember(member: Profile & { status: string }) {
+    this.router.navigate(['/members', member.id]);
   }
 
   get filteredMembers() {
