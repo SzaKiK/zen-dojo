@@ -15,8 +15,8 @@ export class AdminDashboardComponent {
   totalArrived = 24;
 
   recentCheckins = [
-    { initials: 'NK', name: 'Nagy Krisztián', belt: 'Fekete Öv', dojo: 'Dojo 1', time: '18:42', ago: 'Éppen most' },
-    { initials: 'SB', name: 'Szabó Balázs', belt: 'Kék Öv', dojo: 'Dojo 2', time: '18:15', ago: '30 perce' },
-    { initials: 'TL', name: 'Tóth Luca', belt: 'Fehér Öv', dojo: 'Gyerek Csoport', time: '17:50', ago: '55 perce' },
+    { initials: 'MA', name: 'Metzger Antal', belt: 'Fekete Öv 6. dan', dojo: 'Dojo Metzger', time: '18:42', ago: 'Éppen most' },
+    { initials: 'FZ', name: 'Farkas Zoltán', belt: 'Fekete Öv 2. dan', dojo: 'Dojo Metzger', time: '18:15', ago: '30 perce' },
+    { initials: 'RR', name: 'Rácz Richárd', belt: 'Fekete Öv 1. dan', dojo: 'Senshi Usagi', time: '17:50', ago: '55 perce' },
   ];
 }

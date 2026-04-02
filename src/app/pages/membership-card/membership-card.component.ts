@@ -18,9 +18,9 @@ export class MembershipCardComponent implements OnInit {
   demoProfile: Profile = {
     id: 'demo',
     full_name: 'Kovács Bence',
-    avatar_url: 'https://lh3.googleusercontent.com/aida-public/AB6AXuCXTc5TSKofzy94F0LRMlgzkXKlI7c7F98gonmYpvNrp3uJQgCYaa0AVmqI6DiuWS_I5g5Fn95Jw_XXBlkHxJwEwl5K3tourbDJY3c8T3V-twja_MsHlDnCCMbVWH-TAdHQZ4HqkCwvRH8NfW4-EeWV4e0PttCIARpiXObZHLwT9TEtMw7MhjUXuWEg_WIuhi07cg8jonPPEvJ_4A5OUZsb546hGXfh69eSfDmKZBR4l44qDc-CSo2lIuP26Ps8MIkWUIjMKLTL8NI',
+    avatar_url: 'https://dhkse.hu/dhkse_csoportkep.jpg',
     belt_level: 'yellow',
-    qr_code_id: 'MB-2024-0891',
+    qr_code_id: 'DHKSE-2026-0891',
     is_admin: false,
   };
 
