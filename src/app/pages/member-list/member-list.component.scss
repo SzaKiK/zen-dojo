@@ -139,6 +139,19 @@
   .material-icons { font-size: 24px; }
 }
 
+.empty-state {
+  text-align: center;
+  padding: 48px 20px;
+  color: #6a6a8a;
+
+  .material-icons {
+    font-size: 48px;
+    margin-bottom: 12px;
+    opacity: 0.5;
+  }
+  p { font-size: 14px; }
+}
+
 .bottom-nav {
   position: fixed; bottom: 0; left: 0; right: 0;
   display: flex; justify-content: space-around;

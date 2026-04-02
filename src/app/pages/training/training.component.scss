@@ -13,8 +13,48 @@
     .material-icons { color: #4a6cf7; font-size: 24px; }
     .brand { font-size: 14px; font-weight: 600; letter-spacing: 2px; color: #a0a0c0; }
   }
-  .notification-btn { background: none; border: none; color: #a0a0c0; cursor: pointer; }
+  .notification-btn, .logout-btn { background: none; border: none; color: #a0a0c0; cursor: pointer; }
 }
+
+.feedback {
+  margin: 0 20px 12px;
+  padding: 10px 16px;
+  border-radius: 8px;
+  font-size: 13px;
+  font-weight: 500;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+
+  .material-icons { font-size: 18px; }
+
+  &.success {
+    background: rgba(34, 197, 94, 0.12);
+    color: #22c55e;
+    border: 1px solid rgba(34, 197, 94, 0.25);
+  }
+  &.error {
+    background: rgba(239, 68, 68, 0.12);
+    color: #ef4444;
+    border: 1px solid rgba(239, 68, 68, 0.25);
+  }
+}
+
+.loading-state, .empty-state {
+  text-align: center;
+  padding: 48px 20px;
+  color: #6a6a8a;
+
+  .material-icons {
+    font-size: 48px;
+    margin-bottom: 12px;
+    opacity: 0.5;
+  }
+  p { font-size: 14px; }
+}
+
+@keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
+.spin { animation: spin 1s linear infinite; }
 
 .page-title {
   padding: 0 20px 16px;
@@ -141,8 +181,27 @@
         font-family: 'Lexend', sans-serif;
         cursor: pointer;
         transition: opacity 0.2s;
+        display: flex;
+        align-items: center;
+        gap: 4px;
 
-        &:hover { opacity: 0.9; }
+        .material-icons { font-size: 16px; }
+
+        &:hover:not(:disabled) { opacity: 0.9; }
+
+        &:disabled { cursor: default; opacity: 0.9; }
+
+        &.booked {
+          background: rgba(34, 197, 94, 0.15);
+          color: #22c55e;
+          border: 1px solid rgba(34, 197, 94, 0.3);
+        }
+
+        &.full {
+          background: rgba(107, 107, 127, 0.15);
+          color: #6a6a8a;
+          border: 1px solid #2a2a4a;
+        }
       }
     }
   }

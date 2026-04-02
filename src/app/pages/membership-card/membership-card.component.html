@@ -4,18 +4,26 @@
       <span class="material-icons">shield</span>
       <span class="brand">DHKSE</span>
     </div>
-    <button class="notification-btn">
-      <span class="material-icons">notifications</span>
+    <button class="logout-btn" (click)="logout()">
+      <span class="material-icons">logout</span>
     </button>
   </header>
 
   <section class="card-section">
+    @if (loading) {
+      <div class="loading-state">
+        <span class="material-icons spin">sync</span>
+        <p>Betöltés...</p>
+      </div>
+    } @else {
     <h2>Tagsági Kártya</h2>
 
     <div class="membership-card">
       <div class="card-header">
         <img [src]="profile?.avatar_url" [alt]="profile?.full_name" class="avatar" />
-        <span class="status-badge active">ACTIVE</span>
+        <span class="status-badge" [class.active]="membership?.status === 'active'" [class.expired]="membership?.status !== 'active'">
+          {{ membership?.status === 'active' ? 'AKTÍV' : 'LEJÁRT' }}
+        </span>
       </div>
 
       <div class="card-body">
@@ -34,7 +42,11 @@
       <div class="card-stats">
         <div class="stat">
           <span class="label">Részvétel</span>
-          <span class="value">{{ sessionsUsed }} / {{ membership?.total_sessions }} alkalom</span>
+          @if (membership) {
+            <span class="value">{{ sessionsUsed }} / {{ membership.total_sessions }} alkalom</span>
+          } @else {
+            <span class="value">Nincs aktív bérlet</span>
+          }
         </div>
         <div class="stat">
           <span class="label">Dojó</span>
@@ -45,50 +57,48 @@
         </div>
       </div>
     </div>
+    }
   </section>
 
   <section class="recent-sessions">
     <h3>Legutóbbi edzések</h3>
 
-    <div class="session-item">
-      <div class="session-icon">
-        <span class="material-icons">fitness_center</span>
+    @if (recentSessions.length === 0) {
+      <div class="empty-hint">
+        <span class="material-icons">info</span>
+        <p>Még nincs rögzített edzésed.</p>
       </div>
-      <div class="session-info">
-        <h4>Kempo edzés</h4>
-        <p>2026. Március 31. • 18:00</p>
-      </div>
-      <span class="material-icons chevron">chevron_right</span>
-    </div>
-
-    <div class="session-item">
-      <div class="session-icon">
-        <span class="material-icons">history_edu</span>
-      </div>
-      <div class="session-info">
-        <h4>Cross Fitness</h4>
-        <p>2026. Március 29. • 18:00</p>
-      </div>
-      <span class="material-icons chevron">chevron_right</span>
-    </div>
+    } @else {
+      @for (session of recentSessions; track session.date) {
+        <div class="session-item">
+          <div class="session-icon">
+            <span class="material-icons">fitness_center</span>
+          </div>
+          <div class="session-info">
+            <h4>{{ session.title }}</h4>
+            <p>{{ session.date }}</p>
+          </div>
+        </div>
+      }
+    }
   </section>
 
   <nav class="bottom-nav">
     <a routerLink="/membership-card" class="nav-item active">
       <span class="material-icons">home</span>
-      <span>Home</span>
+      <span>Főoldal</span>
     </a>
-    <a routerLink="/membership-card" class="nav-item">
-      <span class="material-icons">military_tech</span>
-      <span>Membership</span>
+    <a routerLink="/berletek" class="nav-item">
+      <span class="material-icons">card_membership</span>
+      <span>Bérletek</span>
     </a>
     <a routerLink="/training" class="nav-item">
       <span class="material-icons">fitness_center</span>
-      <span>Training</span>
+      <span>Edzések</span>
     </a>
     <a routerLink="/membership-card" class="nav-item">
       <span class="material-icons">person</span>
-      <span>Profile</span>
+      <span>Profil</span>
     </a>
   </nav>
 </div>

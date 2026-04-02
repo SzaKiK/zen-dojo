@@ -1,6 +1,6 @@
 import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { RouterLink } from '@angular/router';
+import { Router, RouterLink } from '@angular/router';
 import { SupabaseService, Profile, Membership } from '../../services/supabase.service';
 
 @Component({
@@ -13,6 +13,8 @@ import { SupabaseService, Profile, Membership } from '../../services/supabase.se
 export class MembershipCardComponent implements OnInit {
   profile: Profile | null = null;
   membership: Membership | null = null;
+  recentSessions: { title: string; date: string }[] = [];
+  loading = true;
 
   // Demo data for display when Supabase is not configured
   demoProfile: Profile = {
@@ -34,7 +36,7 @@ export class MembershipCardComponent implements OnInit {
     status: 'active',
   };
 
-  constructor(private supabase: SupabaseService) {}
+  constructor(private supabase: SupabaseService, private router: Router) {}
 
   async ngOnInit() {
     const { data } = await this.supabase.getSession();
@@ -42,14 +44,29 @@ export class MembershipCardComponent implements OnInit {
       this.profile = await this.supabase.getProfile(data.session.user.id);
       if (this.profile) {
         this.membership = await this.supabase.getMembership(this.profile.id);
+        const attendance = await this.supabase.getUserAttendance(this.profile.id, 5);
+        this.recentSessions = attendance.map((a: any) => ({
+          title: a.training_sessions?.title ?? 'Edzés',
+          date: new Date(a.checked_in_at).toLocaleDateString('hu-HU', {
+            year: 'numeric', month: 'long', day: 'numeric',
+          }) + ' • ' + new Date(a.checked_in_at).toLocaleTimeString('hu-HU', {
+            hour: '2-digit', minute: '2-digit',
+          }),
+        }));
       }
     }
 
-    // Fallback to demo data
+    // Fallback to demo data only when not logged in at all
     if (!this.profile) {
       this.profile = this.demoProfile;
       this.membership = this.demoMembership;
     }
+    this.loading = false;
+  }
+
+  async logout() {
+    await this.supabase.signOut();
+    this.router.navigate(['/']);
   }
 
   get sessionsUsed(): number {

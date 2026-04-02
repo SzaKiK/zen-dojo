@@ -4,9 +4,9 @@
       <span class="material-icons">shield</span>
       <span class="brand">DHKSE</span>
     </div>
-    <button class="notification-btn">
-      <span class="material-icons">notifications</span>
-    </button>
+    <a routerLink="/login" class="login-link">
+      <span class="material-icons">login</span>
+    </a>
   </header>
 
   <section class="hero">
@@ -59,4 +59,121 @@
       <p>Erőnléti és állóképességi edzés a harcművészeti teljesítmény fokozásáért.</p>
     </div>
   </section>
+
+  <section class="dojos">
+    <h2>Edzéshelyszínek</h2>
+    <div class="dojo-card">
+      <div class="dojo-icon">
+        <span class="material-icons">location_on</span>
+      </div>
+      <div class="dojo-info">
+        <h3>Dojo Metzger — Bicske</h3>
+        <p>Csokonai Vitéz Mihály Általános Iskola</p>
+        <p class="address">Szent István út 72., 2060 Bicske</p>
+        <p class="instructors">Shihan Metzger Antal (6. dan NKJ) &bull; Sensei Farkas Zoltán (2. dan NKJ)</p>
+      </div>
+    </div>
+    <div class="dojo-card">
+      <div class="dojo-icon">
+        <span class="material-icons">location_on</span>
+      </div>
+      <div class="dojo-info">
+        <h3>Senshi Usagi — Tabajd</h3>
+        <p>Tabajdi Művelődési Ház</p>
+        <p class="address">Kossuth utca 31., 8088 Tabajd</p>
+        <p class="instructors">Sensei Rácz Richárd (1. dan NKJ)</p>
+      </div>
+    </div>
+  </section>
+
+  <section class="documents">
+    <h2>Dokumentumok</h2>
+    <div class="doc-list">
+      <a href="https://dhkse.hu/NKJ_szabalykonyv.pdf" target="_blank" rel="noopener" class="doc-item">
+        <span class="material-icons">menu_book</span>
+        <div>
+          <h4>NKJ Szabálykönyv</h4>
+          <p>Nihon Kempo Jitsu szabályzat</p>
+        </div>
+        <span class="material-icons arrow">open_in_new</span>
+      </a>
+      <a href="https://dhkse.hu/NKJ_szabalykonyv_melleklet.pdf" target="_blank" rel="noopener" class="doc-item">
+        <span class="material-icons">description</span>
+        <div>
+          <h4>NKJ Melléklet</h4>
+          <p>Szabálykönyv kiegészítés</p>
+        </div>
+        <span class="material-icons arrow">open_in_new</span>
+      </a>
+      <a href="https://dhkse.hu/szuloi_nyilatkozat.pdf" target="_blank" rel="noopener" class="doc-item">
+        <span class="material-icons">family_restroom</span>
+        <div>
+          <h4>Szülői nyilatkozat</h4>
+          <p>18 éves kor alatti sportoló esetén</p>
+        </div>
+        <span class="material-icons arrow">open_in_new</span>
+      </a>
+      <a href="https://dhkse.hu/felnott_nyilatkozat.pdf" target="_blank" rel="noopener" class="doc-item">
+        <span class="material-icons">person</span>
+        <div>
+          <h4>Sportolói nyilatkozat</h4>
+          <p>18 év feletti sportoló esetén</p>
+        </div>
+        <span class="material-icons arrow">open_in_new</span>
+      </a>
+      <a href="https://dhkse.hu/OBHGEPI_PK_141_1369667236054_78546603008.pdf" target="_blank" rel="noopener" class="doc-item">
+        <span class="material-icons">account_balance</span>
+        <div>
+          <h4>Közhasznúsági jelentés</h4>
+          <p>Egyszerűsített beszámoló és melléklet</p>
+        </div>
+        <span class="material-icons arrow">open_in_new</span>
+      </a>
+    </div>
+  </section>
+
+  <section class="contact">
+    <h2>Kapcsolat</h2>
+    <div class="contact-grid">
+      <div class="contact-card">
+        <span class="material-icons">email</span>
+        <h4>E-mail</h4>
+        <a href="mailto:info@dhkse.hu">info&#64;dhkse.hu</a>
+      </div>
+      <div class="contact-card">
+        <span class="material-icons">phone</span>
+        <h4>Telefon</h4>
+        <a href="tel:+36209558124">+36 20 955-8124</a>
+      </div>
+      <div class="contact-card">
+        <span class="material-icons">home</span>
+        <h4>Székhely</h4>
+        <p>2060 Bicske, Kölcsey Ferenc utca 23.</p>
+      </div>
+      <div class="contact-card">
+        <span class="material-icons">tag</span>
+        <h4>Adószám</h4>
+        <p>18484384-1-07</p>
+      </div>
+    </div>
+    <div class="social-links">
+      <a href="https://www.facebook.com/dhkse" target="_blank" rel="noopener" class="social-btn facebook">
+        <span class="fb-icon">f</span>
+        Facebook
+      </a>
+      <a href="https://dhkse.hu" target="_blank" rel="noopener" class="social-btn website">
+        <span class="material-icons">language</span>
+        dhkse.hu
+      </a>
+      <a href="https://www.youtube.com/watch?v=b1NZy9JoMSI" target="_blank" rel="noopener" class="social-btn youtube">
+        <span class="material-icons">play_circle</span>
+        Bemutatkozó videó
+      </a>
+    </div>
+  </section>
+
+  <footer class="page-footer">
+    <img src="https://dhkse.hu/Bicske_cimer.png" alt="Bicske" class="supporter-logo" />
+    <p>&copy; {{ currentYear }} DHKSE — Dinamik Harcművészeti Közhasznú Sportegyesület</p>
+  </footer>
 </div>

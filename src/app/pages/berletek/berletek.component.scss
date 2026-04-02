@@ -1,0 +1,194 @@
+.berletek-page {
+  min-height: 100vh;
+  background: #0a0a1a;
+  color: #fff;
+  font-family: 'Lexend', sans-serif;
+  padding-bottom: 80px;
+}
+
+.header {
+  display: flex; justify-content: space-between; align-items: center; padding: 16px 20px;
+  .logo { display: flex; align-items: center; gap: 8px;
+    .material-icons { color: #4a6cf7; font-size: 24px; }
+    .brand { font-size: 14px; font-weight: 600; letter-spacing: 2px; color: #a0a0c0; }
+  }
+  .notification-btn { background: none; border: none; color: #a0a0c0; cursor: pointer; }
+}
+
+.page-title {
+  padding: 0 20px 16px;
+  h1 { font-size: 24px; font-weight: 700; margin-bottom: 4px; }
+  .subtitle { font-size: 13px; color: #6a6a8a; }
+}
+
+.alert-success, .alert-error {
+  margin: 0 20px 16px;
+  padding: 12px 16px;
+  border-radius: 8px;
+  font-size: 13px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.alert-success {
+  background: rgba(34, 197, 94, 0.15);
+  border: 1px solid rgba(34, 197, 94, 0.3);
+  color: #22c55e;
+}
+.alert-error {
+  background: rgba(239, 68, 68, 0.15);
+  border: 1px solid rgba(239, 68, 68, 0.3);
+  color: #ef4444;
+}
+
+.action-bar {
+  padding: 0 20px 16px;
+}
+
+.btn-primary {
+  display: flex; align-items: center; justify-content: center; gap: 8px;
+  background: linear-gradient(135deg, #1132d4 0%, #4a6cf7 100%);
+  color: #fff; padding: 12px 20px; border-radius: 8px; border: none;
+  font-weight: 600; font-size: 14px; font-family: 'Lexend', sans-serif;
+  cursor: pointer; transition: opacity 0.2s;
+  &:hover { opacity: 0.9; }
+  &:disabled { opacity: 0.6; cursor: not-allowed; }
+  &.full-width { width: 100%; }
+}
+
+.form-card {
+  margin: 0 20px 20px;
+  background: #12122a;
+  border: 1px solid #2a2a4a;
+  border-radius: 12px;
+  padding: 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+
+  h3 { font-size: 16px; font-weight: 600; margin-bottom: 4px; }
+}
+
+.form-group {
+  label { display: block; font-size: 12px; color: #a0a0c0; margin-bottom: 6px; font-weight: 500; }
+
+  input, select {
+    width: 100%; padding: 12px 14px;
+    background: #0a0a1a; border: 1px solid #1e1e3e;
+    border-radius: 8px; color: #fff; font-size: 14px;
+    font-family: 'Lexend', sans-serif; outline: none;
+    transition: border-color 0.2s;
+    &:focus { border-color: #4a6cf7; }
+    option { background: #0a0a1a; }
+  }
+}
+
+.loading-state, .empty-state {
+  display: flex; flex-direction: column; align-items: center; justify-content: center;
+  padding: 60px 20px; gap: 12px; text-align: center;
+  .material-icons { font-size: 48px; color: #3a3a5a; }
+  p { font-size: 14px; color: #6a6a8a; }
+  .hint { font-size: 12px; color: #4a4a6a; }
+}
+
+@keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
+.spin { animation: spin 1s linear infinite; }
+
+.membership-list {
+  padding: 0 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.membership-card {
+  background: #12122a;
+  border: 1px solid #1e1e3e;
+  border-radius: 12px;
+  padding: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+
+  .card-top {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 12px;
+  }
+
+  .card-info {
+    flex: 1;
+    .member-name { font-size: 12px; color: #6a6a8a; margin-bottom: 4px; }
+    h3 { font-size: 16px; font-weight: 600; margin-bottom: 8px; }
+  }
+
+  .status-badge {
+    display: inline-block;
+    padding: 4px 12px;
+    border-radius: 12px;
+    font-size: 12px;
+    font-weight: 600;
+
+    &.active {
+      background: rgba(34, 197, 94, 0.15);
+      color: #22c55e;
+      border: 1px solid rgba(34, 197, 94, 0.25);
+    }
+    &.expired {
+      background: rgba(239, 68, 68, 0.15);
+      color: #ef4444;
+      border: 1px solid rgba(239, 68, 68, 0.25);
+    }
+    &.pending {
+      background: rgba(245, 158, 11, 0.15);
+      color: #f59e0b;
+      border: 1px solid rgba(245, 158, 11, 0.25);
+    }
+  }
+
+  .toggle-btn {
+    background: none; border: none; cursor: pointer;
+    &.active .material-icons { font-size: 32px; color: #22c55e; }
+    &.expired .material-icons { font-size: 32px; color: #3a3a5a; }
+  }
+
+  .sessions-bar {
+    .bar-track {
+      height: 6px;
+      background: #1e1e3e;
+      border-radius: 3px;
+      overflow: hidden;
+      margin-bottom: 6px;
+    }
+    .bar-fill {
+      height: 100%;
+      background: linear-gradient(90deg, #1132d4, #4a6cf7);
+      border-radius: 3px;
+      transition: width 0.3s;
+    }
+    .bar-label { font-size: 12px; color: #8888a8; }
+  }
+
+  .card-meta {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 12px;
+    color: #6a6a8a;
+    .material-icons { font-size: 16px; color: #4a6cf7; }
+  }
+}
+
+.bottom-nav {
+  position: fixed; bottom: 0; left: 0; right: 0;
+  display: flex; justify-content: space-around;
+  background: #0e0e20; border-top: 1px solid #1e1e3e;
+  padding: 8px 0 12px;
+  .nav-item {
+    display: flex; flex-direction: column; align-items: center; gap: 4px;
+    color: #4a4a6a; text-decoration: none; font-size: 10px; font-weight: 500;
+    .material-icons { font-size: 24px; }
+    &.active { color: #4a6cf7; }
+  }
+}

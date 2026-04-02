@@ -4,8 +4,8 @@
       <span class="material-icons">shield</span>
       <span class="brand">DHKSE</span>
     </div>
-    <button class="notification-btn">
-      <span class="material-icons">notifications</span>
+    <button class="logout-btn" (click)="logout()">
+      <span class="material-icons">logout</span>
     </button>
   </header>
 
@@ -25,49 +25,81 @@
   </section>
 
   <section class="sessions-list">
-    @for (session of sessions; track session.title) {
-      <div class="session-card">
-        <div class="session-time">
-          <span class="material-icons">schedule</span>
-          {{ session.time }}
-        </div>
-
-        <div class="session-details">
-          <h3>{{ session.title }}</h3>
-          <p class="instructor">{{ session.instructor }}</p>
-          <p class="instructor">{{ session.dojo }}</p>
-          <span class="level-badge" [class]="session.levelClass">{{ session.level }}</span>
-        </div>
-
-        <div class="session-footer">
-          <div class="spots">
-            <div class="spots-bar">
-              <div class="spots-fill" [style.width.%]="((session.total - session.spots) / session.total) * 100"></div>
-            </div>
-            <span class="spots-text">{{ session.spots }} hely</span>
-          </div>
-          <button class="book-btn">Foglalás</button>
-        </div>
+    @if (feedbackMsg) {
+      <div class="feedback" [class]="feedbackType">
+        <span class="material-icons">{{ feedbackType === 'success' ? 'check_circle' : 'error' }}</span>
+        {{ feedbackMsg }}
       </div>
+    }
+
+    @if (loading) {
+      <div class="loading-state">
+        <span class="material-icons spin">sync</span>
+        <p>Betöltés...</p>
+      </div>
+    } @else if (sessions.length === 0) {
+      <div class="empty-state">
+        <span class="material-icons">event_busy</span>
+        <p>Ezen a napon nincs edzés.</p>
+      </div>
+    } @else {
+      @for (session of sessions; track session.title) {
+        <div class="session-card">
+          <div class="session-time">
+            <span class="material-icons">schedule</span>
+            {{ session.time }}
+          </div>
+
+          <div class="session-details">
+            <h3>{{ session.title }}</h3>
+            <p class="instructor">{{ session.instructor_name }}</p>
+            <p class="instructor">{{ session.dojo }}</p>
+            <span class="level-badge" [class]="session.levelClass">{{ session.level }}</span>
+          </div>
+
+          <div class="session-footer">
+            <div class="spots">
+              <div class="spots-bar">
+                <div class="spots-fill" [style.width.%]="(session.current_bookings / session.capacity) * 100"></div>
+              </div>
+              <span class="spots-text">{{ session.capacity - session.current_bookings }} / {{ session.capacity }} hely szabad</span>
+            </div>
+            @if (session.booked) {
+              <button class="book-btn booked" disabled>
+                <span class="material-icons">check</span>
+                Lefoglalva
+              </button>
+            } @else if (session.full) {
+              <button class="book-btn full" disabled>Betelt</button>
+            } @else if (session.booking) {
+              <button class="book-btn" disabled>
+                <span class="material-icons spin">sync</span>
+              </button>
+            } @else {
+              <button class="book-btn" (click)="bookSession(session)">Foglalás</button>
+            }
+          </div>
+        </div>
+      }
     }
   </section>
 
   <nav class="bottom-nav">
     <a routerLink="/membership-card" class="nav-item">
       <span class="material-icons">home</span>
-      <span>Home</span>
+      <span>Főoldal</span>
     </a>
-    <a routerLink="/members" class="nav-item">
-      <span class="material-icons">military_tech</span>
-      <span>Membership</span>
+    <a routerLink="/berletek" class="nav-item">
+      <span class="material-icons">card_membership</span>
+      <span>Bérletek</span>
     </a>
     <a routerLink="/training" class="nav-item active">
       <span class="material-icons">fitness_center</span>
-      <span>Training</span>
+      <span>Edzések</span>
     </a>
     <a routerLink="/membership-card" class="nav-item">
       <span class="material-icons">person</span>
-      <span>Profile</span>
+      <span>Profil</span>
     </a>
   </nav>
 </div>

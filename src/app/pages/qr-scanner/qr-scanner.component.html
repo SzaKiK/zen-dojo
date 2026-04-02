@@ -1,0 +1,120 @@
+<div class="scanner-page">
+  <header class="header">
+    <a routerLink="/admin" class="back-btn">
+      <span class="material-icons">arrow_back</span>
+    </a>
+    <div class="logo">
+      <span class="material-icons">shield</span>
+      <span class="brand">DHKSE</span>
+    </div>
+    <div class="spacer"></div>
+  </header>
+
+  <section class="page-title">
+    <h1>QR Beolvasás</h1>
+    <p class="subtitle">Tartsd a kamerát a tag QR kódja elé</p>
+  </section>
+
+  <!-- Camera view -->
+  @if (!result && !cameraError) {
+    <div class="camera-container">
+      <video #videoEl autoplay muted playsinline class="camera-feed"></video>
+      <canvas #canvasEl class="scan-canvas" hidden></canvas>
+      <div class="scan-overlay">
+        <div class="scan-frame">
+          <div class="corner tl"></div>
+          <div class="corner tr"></div>
+          <div class="corner bl"></div>
+          <div class="corner br"></div>
+        </div>
+        <p class="scan-hint">Keresés...</p>
+      </div>
+      @if (processing) {
+        <div class="processing-overlay">
+          <span class="material-icons spin">sync</span>
+          <p>Feldolgozás...</p>
+        </div>
+      }
+    </div>
+  }
+
+  <!-- No camera -->
+  @if (cameraError && !result) {
+    <div class="error-container">
+      <span class="material-icons">no_photography</span>
+      <p>{{ cameraError }}</p>
+      <button class="btn-primary" (click)="scanAgain()">
+        <span class="material-icons">refresh</span>
+        Újra próbálás
+      </button>
+    </div>
+  }
+
+  <!-- Scan result -->
+  @if (result) {
+    <div class="result-container">
+      <div class="checkin-badge {{ membershipStatusClass }}">
+        <span class="material-icons">{{ membershipStatusClass === 'active' ? 'check_circle' : 'cancel' }}</span>
+        <span>{{ membershipStatusClass === 'active' ? 'Sikeres becsekkolás!' : 'Bérlet probléma!' }}</span>
+      </div>
+
+      <div class="member-card">
+        <div class="member-header">
+          <div class="member-avatar">
+            @if (result.profile.avatar_url) {
+              <img [src]="result.profile.avatar_url" [alt]="result.profile.full_name" />
+            } @else {
+              <span class="material-icons">person</span>
+            }
+          </div>
+          <div class="member-info">
+            <h2>{{ result.profile.full_name }}</h2>
+            <p class="member-id">ID: {{ result.profile.qr_code_id }}</p>
+          </div>
+        </div>
+
+        <div class="membership-info">
+          <span class="material-icons">card_membership</span>
+          <div>
+            <p class="membership-label">Bérlet státusz</p>
+            <p class="membership-value {{ membershipStatusClass }}">{{ membershipStatus }}</p>
+          </div>
+        </div>
+
+        @if (result.membership?.valid_until) {
+          <div class="membership-info">
+            <span class="material-icons">event</span>
+            <div>
+              <p class="membership-label">Érvényes</p>
+              <p class="membership-value">{{ result.membership!.valid_until | date:'yyyy. MMMM d.' }}</p>
+            </div>
+          </div>
+        }
+      </div>
+
+      <button class="btn-primary scan-again-btn" (click)="scanAgain()">
+        <span class="material-icons">qr_code_scanner</span>
+        Következő tag beolvasása
+      </button>
+    </div>
+  }
+
+  <nav class="bottom-nav">
+    <a routerLink="/admin" class="nav-item">
+      <span class="material-icons">dashboard</span>
+      <span>Vezérlőpult</span>
+    </a>
+    <a routerLink="/qr-scanner" class="nav-item active">
+      <span class="material-icons">qr_code_scanner</span>
+      <span>QR Scan</span>
+    </a>
+    <a routerLink="/members" class="nav-item">
+      <span class="material-icons">group</span>
+      <span>Tagok</span>
+    </a>
+    <a routerLink="/berletek" class="nav-item">
+      <span class="material-icons">card_membership</span>
+      <span>Bérletek</span>
+    </a>
+  </nav>
+</div>

@@ -1,0 +1,179 @@
+<div class="berletek-page">
+  <header class="header">
+    <div class="logo">
+      <span class="material-icons">shield</span>
+      <span class="brand">DHKSE</span>
+    </div>
+    <button class="logout-btn" (click)="logout()">
+      <span class="material-icons">logout</span>
+    </button>
+  </header>
+
+  <section class="page-title">
+    <h1>Bérletek</h1>
+    <p class="subtitle">{{ isAdmin ? 'Tagság és bérlet kezelés' : 'Saját bérlet állapota' }}</p>
+  </section>
+
+  @if (successMsg) {
+    <div class="alert-success">
+      <span class="material-icons">check_circle</span>
+      {{ successMsg }}
+    </div>
+  }
+  @if (errorMsg) {
+    <div class="alert-error">
+      <span class="material-icons">error</span>
+      {{ errorMsg }}
+    </div>
+  }
+
+  <!-- Admin: New Bérlet Button -->
+  @if (isAdmin) {
+    <div class="action-bar">
+      <button class="btn-primary" (click)="showNewForm = !showNewForm">
+        <span class="material-icons">{{ showNewForm ? 'close' : 'add' }}</span>
+        {{ showNewForm ? 'Mégsem' : 'Új bérlet' }}
+      </button>
+    </div>
+  }
+
+  <!-- New Bérlet Form -->
+  @if (showNewForm && isAdmin) {
+    <div class="form-card">
+      <h3>Új bérlet létrehozása</h3>
+
+      <div class="form-group">
+        <label>Tag</label>
+        <select [(ngModel)]="newBerlet.user_id">
+          <option value="">Válassz tagot...</option>
+          @for (p of profiles; track p.id) {
+            <option [value]="p.id">{{ p.full_name }}</option>
+          }
+        </select>
+      </div>
+
+      <div class="form-group">
+        <label>Bérlet típusa</label>
+        <select [(ngModel)]="newBerlet.type">
+          <option value="session_pass">Alkalombérlet</option>
+          <option value="monthly">Havi bérlet</option>
+          <option value="annual">Éves bérlet</option>
+        </select>
+      </div>
+
+      @if (newBerlet.type === 'session_pass') {
+        <div class="form-group">
+          <label>Alkalmak száma</label>
+          <input type="number" [(ngModel)]="newBerlet.total_sessions" min="1" max="100" />
+        </div>
+      }
+
+      <div class="form-group">
+        <label>Érvényes</label>
+        <input type="date" [(ngModel)]="newBerlet.valid_until" [min]="defaultValidUntil" />
+      </div>
+
+      <button class="btn-primary full-width" (click)="saveBerlet()" [disabled]="saving">
+        {{ saving ? 'Mentés...' : 'Bérlet létrehozása' }}
+        <span class="material-icons">save</span>
+      </button>
+    </div>
+  }
+
+  <!-- Loading -->
+  @if (loading) {
+    <div class="loading-state">
+      <span class="material-icons spin">sync</span>
+      <p>Betöltés...</p>
+    </div>
+  }
+
+  <!-- Membership list -->
+  @if (!loading) {
+    @if (memberships.length === 0) {
+      <div class="empty-state">
+        <span class="material-icons">card_membership</span>
+        <p>{{ isAdmin ? 'Még nincsenek bérletek.' : 'Nincs aktív bérleted.' }}</p>
+        @if (!isAdmin) {
+          <p class="hint">Lépj kapcsolatba az edzővel a bérlet igényléséhez.</p>
+        }
+      </div>
+    } @else {
+      <div class="membership-list">
+        @for (m of memberships; track m.id) {
+          <div class="membership-card">
+            <div class="card-top">
+              <div class="card-info">
+                @if (isAdmin) {
+                  <p class="member-name">{{ memberName(m) }}</p>
+                }
+                <h3>{{ typeLabel(m.type) }}</h3>
+                <span class="status-badge {{ statusClass(m) }}">{{ statusLabel(m) }}</span>
+              </div>
+              @if (isAdmin) {
+                <button class="toggle-btn {{ statusClass(m) }}" (click)="toggleStatus(m)" title="Státusz váltása">
+                  <span class="material-icons">{{ m.status === 'active' ? 'toggle_on' : 'toggle_off' }}</span>
+                </button>
+              }
+            </div>
+
+            @if (m.type === 'session_pass') {
+              <div class="sessions-bar">
+                <div class="bar-track">
+                  <div class="bar-fill" [style.width.%]="m.total_sessions > 0 ? (m.remaining_sessions / m.total_sessions) * 100 : 0"></div>
+                </div>
+                <span class="bar-label">{{ m.remaining_sessions }} / {{ m.total_sessions }} alkalom</span>
+              </div>
+            }
+
+            <div class="card-meta">
+              <span class="material-icons">event</span>
+              <span>Érvényes: {{ m.valid_until | date:'yyyy. MMMM d.' }}</span>
+            </div>
+          </div>
+        }
+      </div>
+    }
+  }
+
+  <!-- Bottom nav (admin) -->
+  @if (isAdmin) {
+    <nav class="bottom-nav">
+      <a routerLink="/admin" class="nav-item">
+        <span class="material-icons">dashboard</span>
+        <span>Vezérlőpult</span>
+      </a>
+      <a routerLink="/qr-scanner" class="nav-item">
+        <span class="material-icons">qr_code_scanner</span>
+        <span>QR Scan</span>
+      </a>
+      <a routerLink="/members" class="nav-item">
+        <span class="material-icons">group</span>
+        <span>Tagok</span>
+      </a>
+      <a routerLink="/berletek" class="nav-item active">
+        <span class="material-icons">card_membership</span>
+        <span>Bérletek</span>
+      </a>
+    </nav>
+  } @else {
+    <nav class="bottom-nav">
+      <a routerLink="/membership-card" class="nav-item">
+        <span class="material-icons">home</span>
+        <span>Főoldal</span>
+      </a>
+      <a routerLink="/berletek" class="nav-item active">
+        <span class="material-icons">card_membership</span>
+        <span>Bérlet</span>
+      </a>
+      <a routerLink="/training" class="nav-item">
+        <span class="material-icons">fitness_center</span>
+        <span>Edzések</span>
+      </a>
+      <a routerLink="/membership-card" class="nav-item">
+        <span class="material-icons">person</span>
+        <span>Profil</span>
+      </a>
+    </nav>
+  }
+</div>

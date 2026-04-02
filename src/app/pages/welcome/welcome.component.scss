@@ -187,3 +187,209 @@
     }
   }
 }
+
+.dojos {
+  padding: 32px 20px;
+
+  h2 {
+    font-size: 20px;
+    font-weight: 700;
+    margin-bottom: 16px;
+  }
+
+  .dojo-card {
+    display: flex;
+    gap: 14px;
+    background: #12122a;
+    border: 1px solid #1e1e3e;
+    border-radius: 12px;
+    padding: 16px;
+    margin-bottom: 12px;
+
+    .dojo-icon {
+      width: 44px;
+      height: 44px;
+      border-radius: 10px;
+      background: rgba(74, 108, 247, 0.1);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+
+      .material-icons { font-size: 22px; color: #4a6cf7; }
+    }
+
+    .dojo-info {
+      h3 { font-size: 15px; font-weight: 600; margin-bottom: 4px; }
+      p { font-size: 13px; color: #8888a8; margin-bottom: 2px; }
+      .address { font-size: 12px; color: #6a6a8a; }
+      .instructors { font-size: 11px; color: #5a5a7a; margin-top: 6px; }
+    }
+  }
+}
+
+.documents {
+  padding: 0 20px 32px;
+
+  h2 {
+    font-size: 20px;
+    font-weight: 700;
+    margin-bottom: 16px;
+  }
+
+  .doc-list {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+  }
+
+  .doc-item {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    background: #12122a;
+    border: 1px solid #1e1e3e;
+    border-radius: 10px;
+    padding: 14px 16px;
+    text-decoration: none;
+    color: #fff;
+    transition: background 0.2s;
+
+    &:hover { background: #1a1a3a; }
+
+    > .material-icons {
+      font-size: 22px;
+      color: #4a6cf7;
+      flex-shrink: 0;
+    }
+
+    div {
+      flex: 1;
+      h4 { font-size: 13px; font-weight: 600; margin-bottom: 2px; }
+      p { font-size: 11px; color: #6a6a8a; }
+    }
+
+    .arrow {
+      font-size: 18px;
+      color: #3a3a5a;
+    }
+  }
+}
+
+.contact {
+  padding: 0 20px 32px;
+
+  h2 {
+    font-size: 20px;
+    font-weight: 700;
+    margin-bottom: 16px;
+  }
+
+  .contact-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 10px;
+    margin-bottom: 16px;
+  }
+
+  .contact-card {
+    background: #12122a;
+    border: 1px solid #1e1e3e;
+    border-radius: 10px;
+    padding: 16px;
+    text-align: center;
+
+    .material-icons {
+      font-size: 24px;
+      color: #4a6cf7;
+      margin-bottom: 6px;
+    }
+
+    h4 {
+      font-size: 11px;
+      color: #6a6a8a;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      margin-bottom: 6px;
+    }
+
+    a, p {
+      font-size: 13px;
+      color: #c0c0e0;
+      text-decoration: none;
+      word-break: break-all;
+    }
+
+    a:hover { color: #4a6cf7; }
+  }
+
+  .social-links {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+  }
+
+  .social-btn {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    padding: 12px;
+    border-radius: 8px;
+    text-decoration: none;
+    font-size: 14px;
+    font-weight: 500;
+    transition: opacity 0.2s;
+
+    &:hover { opacity: 0.85; }
+
+    .material-icons { font-size: 20px; }
+
+    .fb-icon {
+      width: 20px;
+      height: 20px;
+      border-radius: 4px;
+      background: #fff;
+      color: #1877f2;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: 800;
+      font-size: 14px;
+    }
+
+    &.facebook {
+      background: #1877f2;
+      color: #fff;
+    }
+
+    &.website {
+      background: rgba(74, 108, 247, 0.12);
+      color: #4a6cf7;
+      border: 1px solid rgba(74, 108, 247, 0.25);
+    }
+
+    &.youtube {
+      background: rgba(255, 0, 0, 0.1);
+      color: #ff4444;
+      border: 1px solid rgba(255, 0, 0, 0.2);
+    }
+  }
+}
+
+.page-footer {
+  text-align: center;
+  padding: 24px 20px 32px;
+  border-top: 1px solid #1e1e3e;
+
+  .supporter-logo {
+    height: 40px;
+    opacity: 0.5;
+    margin-bottom: 12px;
+  }
+
+  p {
+    font-size: 11px;
+    color: #4a4a6a;
+  }
+}

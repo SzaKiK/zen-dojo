@@ -1,7 +1,7 @@
 import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-import { RouterLink } from '@angular/router';
+import { Router, RouterLink } from '@angular/router';
 import { SupabaseService, Profile } from '../../services/supabase.service';
 
 @Component({
@@ -45,7 +45,12 @@ export class MemberListComponent implements OnInit {
     },
   ];
 
-  constructor(private supabase: SupabaseService) {}
+  constructor(private supabase: SupabaseService, private router: Router) {}
+
+  async logout() {
+    await this.supabase.signOut();
+    this.router.navigate(['/']);
+  }
 
   async ngOnInit() {
     const profiles = await this.supabase.getAllProfiles();

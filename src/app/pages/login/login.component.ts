@@ -24,12 +24,24 @@ export class LoginComponent {
   async onSubmit() {
     this.loading = true;
     this.error = '';
-    const { error } = await this.supabase.signIn(this.email, this.password);
-    this.loading = false;
+    const { error, data } = await this.supabase.signIn(this.email, this.password);
     if (error) {
+      this.loading = false;
       this.error = error.message;
+      return;
+    }
+    // Check admin role and redirect accordingly
+    const userId = data?.session?.user?.id;
+    if (userId) {
+      const profile = await this.supabase.getProfile(userId);
+      if (profile?.is_admin) {
+        this.router.navigate(['/admin']);
+      } else {
+        this.router.navigate(['/membership-card']);
+      }
     } else {
       this.router.navigate(['/membership-card']);
     }
+    this.loading = false;
   }
 }

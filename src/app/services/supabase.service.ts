@@ -48,7 +48,15 @@ export class SupabaseService {
     if (!this.isMockMode) {
       this.supabase = createClient(
         environment.supabaseUrl,
-        environment.supabaseKey
+        environment.supabaseKey,
+        {
+          auth: {
+            persistSession: true,
+            autoRefreshToken: true,
+            detectSessionInUrl: true,
+            lock: <R>(_name: string, _acquireTimeout: number, fn: () => Promise<R>) => fn(),
+          },
+        }
       );
     }
   }
@@ -93,7 +101,7 @@ export class SupabaseService {
       .from('profiles')
       .select('*')
       .eq('id', userId)
-      .single();
+      .maybeSingle();
     return data;
   }
 
@@ -103,7 +111,7 @@ export class SupabaseService {
       .from('profiles')
       .select('*')
       .eq('qr_code_id', qrCodeId)
-      .single();
+      .maybeSingle();
     return data;
   }
 
@@ -124,7 +132,7 @@ export class SupabaseService {
       .eq('user_id', userId)
       .order('created_at', { ascending: false })
       .limit(1)
-      .single();
+      .maybeSingle();
     return data;
   }
 
@@ -149,7 +157,7 @@ export class SupabaseService {
       .from('training_sessions')
       .select('current_bookings')
       .eq('id', sessionId)
-      .single();
+      .maybeSingle();
 
     if (session) {
       return this.supabase!
@@ -158,5 +166,78 @@ export class SupabaseService {
         .eq('id', sessionId);
     }
     return null;
+  }
+
+  // Bérletek (Memberships/Passes)
+  async getAllMemberships(): Promise<(Membership & { profile?: Profile })[]> {
+    if (this.isMockMode) return [];
+    const { data } = await this.supabase!
+      .from('memberships')
+      .select('*, profiles(full_name, belt_level)')
+      .order('created_at', { ascending: false });
+    return data ?? [];
+  }
+
+  async createMembership(membership: Omit<Membership, 'id'>) {
+    if (this.isMockMode) return { error: null };
+    return this.supabase!.from('memberships').insert(membership);
+  }
+
+  async decrementSession(membershipId: string, currentRemaining: number) {
+    if (this.isMockMode) return { error: null };
+    return this.supabase!
+      .from('memberships')
+      .update({ remaining_sessions: currentRemaining - 1 })
+      .eq('id', membershipId);
+  }
+
+  // Attendance / Check-in
+  async logAttendance(userId: string, sessionId?: string) {
+    if (this.isMockMode) return { error: null };
+    return this.supabase!.from('attendance_log').insert({
+      user_id: userId,
+      session_id: sessionId ?? null,
+    });
+  }
+
+  async getRecentAttendance(limit = 20) {
+    if (this.isMockMode) return [];
+    const { data } = await this.supabase!
+      .from('attendance_log')
+      .select('*, profiles(full_name, belt_level, avatar_url)')
+      .order('checked_in_at', { ascending: false })
+      .limit(limit);
+    return data ?? [];
+  }
+
+  async getUserAttendance(userId: string, limit = 5) {
+    if (this.isMockMode) return [];
+    const { data } = await this.supabase!
+      .from('attendance_log')
+      .select('*, training_sessions(title)')
+      .eq('user_id', userId)
+      .order('checked_in_at', { ascending: false })
+      .limit(limit);
+    return data ?? [];
+  }
+
+  async getAttendanceStats() {
+    if (this.isMockMode) return { total: 0, today: 0 };
+    const todayStart = new Date();
+    todayStart.setHours(0, 0, 0, 0);
+    const { count: today } = await this.supabase!
+      .from('attendance_log')
+      .select('*', { count: 'exact', head: true })
+      .gte('checked_in_at', todayStart.toISOString());
+    const { count: total } = await this.supabase!
+      .from('attendance_log')
+      .select('*', { count: 'exact', head: true });
+    return { today: today ?? 0, total: total ?? 0 };
+  }
+
+  // Profile update
+  async updateProfile(userId: string, updates: Partial<Profile>) {
+    if (this.isMockMode) return { error: null };
+    return this.supabase!.from('profiles').update(updates).eq('id', userId);
   }
 }

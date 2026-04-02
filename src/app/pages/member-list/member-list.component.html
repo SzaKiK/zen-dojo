@@ -4,8 +4,8 @@
       <span class="material-icons">shield</span>
       <span class="brand">DHKSE</span>
     </div>
-    <button class="notification-btn">
-      <span class="material-icons">notifications</span>
+    <button class="logout-btn" (click)="logout()">
+      <span class="material-icons">logout</span>
     </button>
   </header>
 
@@ -26,52 +26,58 @@
         (click)="setFilter('all')"
       >Összes</button>
       <button
-        [class.active]="activeFilter === 'belt'"
-        (click)="setFilter('belt')"
-      >Övfokozatok</button>
-      <button
         [class.active]="activeFilter === 'active'"
         (click)="setFilter('active')"
-      >Státusz</button>
+      >Aktív</button>
+      <button
+        [class.active]="activeFilter === 'expired'"
+        (click)="setFilter('expired')"
+      >Lejárt</button>
     </div>
   </section>
 
   <section class="member-cards">
-    @for (member of filteredMembers; track member.id) {
-      <div class="member-card" routerLink="/membership-card">
-        <img [src]="member.avatar_url" [alt]="member.full_name" class="member-avatar" />
-        <div class="member-info">
-          <h3>{{ member.full_name }}</h3>
-          <span class="status-badge" [class]="member.status">
-            {{ member.status === 'active' ? 'Aktív' : 'Lejárt' }}
-          </span>
-          <p class="belt">{{ beltName(member.belt_level) }}</p>
-        </div>
-        <span class="material-icons chevron">chevron_right</span>
+    @if (filteredMembers.length === 0) {
+      <div class="empty-state">
+        <span class="material-icons">group_off</span>
+        <p>Nincs találat.</p>
       </div>
+    } @else {
+      @for (member of filteredMembers; track member.id) {
+        <div class="member-card">
+          <img [src]="member.avatar_url" [alt]="member.full_name" class="member-avatar" />
+          <div class="member-info">
+            <h3>{{ member.full_name }}</h3>
+            <span class="status-badge" [class]="member.status">
+              {{ member.status === 'active' ? 'Aktív' : 'Lejárt' }}
+            </span>
+            <p class="belt">{{ beltName(member.belt_level) }}</p>
+          </div>
+        </div>
+      }
     }
   </section>
 
-  <button class="fab" routerLink="/admin">
+  <button class="fab" routerLink="/berletek">
     <span class="material-icons">person_add</span>
   </button>
 
   <nav class="bottom-nav">
     <a routerLink="/admin" class="nav-item">
-      <span class="material-icons">home</span>
-      <span>Home</span>
+      <span class="material-icons">dashboard</span>
+      <span>Vezérlőpult</span>
+    </a>
+    <a routerLink="/qr-scanner" class="nav-item">
+      <span class="material-icons">qr_code_scanner</span>
+      <span>QR Scan</span>
     </a>
     <a routerLink="/members" class="nav-item active">
-      <span class="material-icons">military_tech</span>
-      <span>Membership</span>
+      <span class="material-icons">group</span>
+      <span>Tagok</span>
     </a>
-    <a routerLink="/training" class="nav-item">
-      <span class="material-icons">fitness_center</span>
-      <span>Training</span>
-    </a>
-    <a routerLink="/membership-card" class="nav-item">
-      <span class="material-icons">person</span>
-      <span>Profile</span>
+    <a routerLink="/berletek" class="nav-item">
+      <span class="material-icons">card_membership</span>
+      <span>Bérletek</span>
     </a>
   </nav>
 </div>
