@@ -1,0 +1,94 @@
+<div class="card-page">
+  <header class="header">
+    <div class="logo">
+      <span class="material-icons">shield</span>
+      <span class="brand">MODERN BUSHIDO</span>
+    </div>
+    <button class="notification-btn">
+      <span class="material-icons">notifications</span>
+    </button>
+  </header>
+
+  <section class="card-section">
+    <h2>Tagsági Kártya</h2>
+
+    <div class="membership-card">
+      <div class="card-header">
+        <img [src]="profile?.avatar_url" [alt]="profile?.full_name" class="avatar" />
+        <span class="status-badge active">ACTIVE</span>
+      </div>
+
+      <div class="card-body">
+        <h2 class="member-name">{{ profile?.full_name }}</h2>
+        <p class="member-id">ID: #{{ profile?.qr_code_id }}</p>
+        <p class="belt-level">{{ beltDisplay }}</p>
+      </div>
+
+      <div class="qr-section">
+        <div class="qr-placeholder">
+          <span class="material-icons">qr_code_2</span>
+          <p>Érintse az olvasóhoz</p>
+        </div>
+      </div>
+
+      <div class="card-stats">
+        <div class="stat">
+          <span class="label">Részvétel</span>
+          <span class="value">{{ sessionsUsed }} / {{ membership?.total_sessions }} alkalom</span>
+        </div>
+        <div class="stat">
+          <span class="label">Dojo</span>
+          <span class="value">
+            <span class="material-icons">location_on</span>
+            Budapest XI.
+          </span>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="recent-sessions">
+    <h3>Legutóbbi edzések</h3>
+
+    <div class="session-item">
+      <div class="session-icon">
+        <span class="material-icons">fitness_center</span>
+      </div>
+      <div class="session-info">
+        <h4>Küzdősport technika</h4>
+        <p>2024. Május 22. • 18:30</p>
+      </div>
+      <span class="material-icons chevron">chevron_right</span>
+    </div>
+
+    <div class="session-item">
+      <div class="session-icon">
+        <span class="material-icons">history_edu</span>
+      </div>
+      <div class="session-info">
+        <h4>Bushido Elmélet</h4>
+        <p>2024. Május 20. • 17:00</p>
+      </div>
+      <span class="material-icons chevron">chevron_right</span>
+    </div>
+  </section>
+
+  <nav class="bottom-nav">
+    <a routerLink="/membership-card" class="nav-item active">
+      <span class="material-icons">home</span>
+      <span>Home</span>
+    </a>
+    <a routerLink="/membership-card" class="nav-item">
+      <span class="material-icons">military_tech</span>
+      <span>Membership</span>
+    </a>
+    <a routerLink="/training" class="nav-item">
+      <span class="material-icons">fitness_center</span>
+      <span>Training</span>
+    </a>
+    <a routerLink="/membership-card" class="nav-item">
+      <span class="material-icons">person</span>
+      <span>Profile</span>
+    </a>
+  </nav>
+</div>

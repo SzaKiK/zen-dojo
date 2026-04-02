@@ -1,0 +1,106 @@
+<div class="admin-page">
+  <header class="header">
+    <div class="logo">
+      <span class="material-icons">shield</span>
+      <span class="brand">MODERN BUSHIDO</span>
+    </div>
+    <button class="notification-btn">
+      <span class="material-icons">notifications</span>
+    </button>
+  </header>
+
+  <section class="welcome-section">
+    <h1>Admin Vezérlőpult</h1>
+    <p class="subtitle">Üdvözöljük újra a dojoban, Sensei.</p>
+  </section>
+
+  <section class="daily-stats">
+    <h3>Napi látogatottság</h3>
+
+    <div class="attendance-card">
+      <h4>Jelenléti Napló</h4>
+      <p class="attendance-desc">
+        A mai edzésekre eddig <strong>{{ totalArrived }}</strong> tanítvány érkezett a <strong>{{ totalExpected }}</strong>-ből.
+      </p>
+
+      <div class="progress-bar">
+        <div class="progress-fill" [style.width.%]="attendancePercent"></div>
+      </div>
+      <span class="progress-label">{{ attendancePercent }}%</span>
+    </div>
+  </section>
+
+  <section class="alerts">
+    <div class="alert-card warning">
+      <div class="alert-content">
+        <span class="alert-title">Lejáró tagságok</span>
+        <span class="alert-count">5</span>
+      </div>
+      <span class="material-icons">warning</span>
+      <p class="alert-desc">Azonnali intézkedést igényel</p>
+    </div>
+
+    <div class="alert-card info">
+      <div class="alert-content">
+        <span class="alert-title">Új regisztrációk</span>
+        <span class="alert-count">+3</span>
+      </div>
+      <span class="material-icons">person_add</span>
+      <p class="alert-desc">Az elmúlt 24 órában</p>
+    </div>
+  </section>
+
+  <section class="quick-actions">
+    <h4>Gyors Műveletek</h4>
+    <div class="action-buttons">
+      <button class="action-btn" routerLink="/members">
+        <span class="material-icons">qr_code_scanner</span>
+        QR Szkennelés
+      </button>
+      <button class="action-btn">
+        <span class="material-icons">edit_note</span>
+        Manuális Beírás
+      </button>
+    </div>
+  </section>
+
+  <section class="recent-checkins">
+    <div class="section-header">
+      <h4>Friss Becsekkolások</h4>
+      <a routerLink="/members" class="view-all">Összes mutatása</a>
+    </div>
+
+    @for (checkin of recentCheckins; track checkin.name) {
+      <div class="checkin-item">
+        <div class="checkin-avatar">{{ checkin.initials }}</div>
+        <div class="checkin-info">
+          <h5>{{ checkin.name }}</h5>
+          <p>{{ checkin.belt }} • {{ checkin.dojo }}</p>
+        </div>
+        <div class="checkin-time">
+          <span class="time">{{ checkin.time }}</span>
+          <span class="ago">{{ checkin.ago }}</span>
+        </div>
+      </div>
+    }
+  </section>
+
+  <nav class="bottom-nav">
+    <a routerLink="/admin" class="nav-item active">
+      <span class="material-icons">home</span>
+      <span>Home</span>
+    </a>
+    <a routerLink="/members" class="nav-item">
+      <span class="material-icons">military_tech</span>
+      <span>Membership</span>
+    </a>
+    <a routerLink="/training" class="nav-item">
+      <span class="material-icons">fitness_center</span>
+      <span>Training</span>
+    </a>
+    <a routerLink="/admin" class="nav-item">
+      <span class="material-icons">person</span>
+      <span>Profile</span>
+    </a>
+  </nav>
+</div>

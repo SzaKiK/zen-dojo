@@ -1,0 +1,72 @@
+<div class="training-page">
+  <header class="header">
+    <div class="logo">
+      <span class="material-icons">shield</span>
+      <span class="brand">MODERN BUSHIDO</span>
+    </div>
+    <button class="notification-btn">
+      <span class="material-icons">notifications</span>
+    </button>
+  </header>
+
+  <section class="page-title">
+    <h1>Edzésrend és Foglalás</h1>
+    <p class="subtitle">Válaszd ki a napot és foglald le az edzést</p>
+  </section>
+
+  <section class="day-selector">
+    @for (day of days; track day) {
+      <button
+        [class.active]="selectedDay === day"
+        (click)="selectDay(day)"
+        class="day-btn"
+      >{{ day }}</button>
+    }
+  </section>
+
+  <section class="sessions-list">
+    @for (session of sessions; track session.title) {
+      <div class="session-card">
+        <div class="session-time">
+          <span class="material-icons">schedule</span>
+          {{ session.time }}
+        </div>
+
+        <div class="session-details">
+          <h3>{{ session.title }}</h3>
+          <p class="instructor">{{ session.instructor }}</p>
+          <span class="level-badge" [class]="session.levelClass">{{ session.level }}</span>
+        </div>
+
+        <div class="session-footer">
+          <div class="spots">
+            <div class="spots-bar">
+              <div class="spots-fill" [style.width.%]="((session.total - session.spots) / session.total) * 100"></div>
+            </div>
+            <span class="spots-text">{{ session.spots }} hely</span>
+          </div>
+          <button class="book-btn">Foglalás</button>
+        </div>
+      </div>
+    }
+  </section>
+
+  <nav class="bottom-nav">
+    <a routerLink="/membership-card" class="nav-item">
+      <span class="material-icons">home</span>
+      <span>Home</span>
+    </a>
+    <a routerLink="/members" class="nav-item">
+      <span class="material-icons">military_tech</span>
+      <span>Membership</span>
+    </a>
+    <a routerLink="/training" class="nav-item active">
+      <span class="material-icons">fitness_center</span>
+      <span>Training</span>
+    </a>
+    <a routerLink="/membership-card" class="nav-item">
+      <span class="material-icons">person</span>
+      <span>Profile</span>
+    </a>
+  </nav>
+</div>

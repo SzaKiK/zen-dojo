@@ -1,0 +1,77 @@
+<div class="members-page">
+  <header class="header">
+    <div class="logo">
+      <span class="material-icons">shield</span>
+      <span class="brand">MODERN BUSHIDO</span>
+    </div>
+    <button class="notification-btn">
+      <span class="material-icons">notifications</span>
+    </button>
+  </header>
+
+  <section class="search-section">
+    <h1>Taglista</h1>
+    <div class="search-bar">
+      <span class="material-icons">search</span>
+      <input
+        type="text"
+        [(ngModel)]="searchQuery"
+        placeholder="Keresés..."
+      />
+    </div>
+
+    <div class="filter-tabs">
+      <button
+        [class.active]="activeFilter === 'all'"
+        (click)="setFilter('all')"
+      >Összes</button>
+      <button
+        [class.active]="activeFilter === 'belt'"
+        (click)="setFilter('belt')"
+      >Övfokozatok</button>
+      <button
+        [class.active]="activeFilter === 'active'"
+        (click)="setFilter('active')"
+      >Státusz</button>
+    </div>
+  </section>
+
+  <section class="member-cards">
+    @for (member of filteredMembers; track member.id) {
+      <div class="member-card" routerLink="/membership-card">
+        <img [src]="member.avatar_url" [alt]="member.full_name" class="member-avatar" />
+        <div class="member-info">
+          <h3>{{ member.full_name }}</h3>
+          <span class="status-badge" [class]="member.status">
+            {{ member.status === 'active' ? 'Aktív' : 'Lejárt' }}
+          </span>
+          <p class="belt">{{ beltName(member.belt_level) }}</p>
+        </div>
+        <span class="material-icons chevron">chevron_right</span>
+      </div>
+    }
+  </section>
+
+  <button class="fab" routerLink="/admin">
+    <span class="material-icons">person_add</span>
+  </button>
+
+  <nav class="bottom-nav">
+    <a routerLink="/admin" class="nav-item">
+      <span class="material-icons">home</span>
+      <span>Home</span>
+    </a>
+    <a routerLink="/members" class="nav-item active">
+      <span class="material-icons">military_tech</span>
+      <span>Membership</span>
+    </a>
+    <a routerLink="/training" class="nav-item">
+      <span class="material-icons">fitness_center</span>
+      <span>Training</span>
+    </a>
+    <a routerLink="/membership-card" class="nav-item">
+      <span class="material-icons">person</span>
+      <span>Profile</span>
+    </a>
+  </nav>
+</div>
