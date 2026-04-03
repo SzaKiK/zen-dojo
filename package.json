@@ -19,6 +19,7 @@
     "@angular/platform-browser": "^18.2.0",
     "@angular/platform-browser-dynamic": "^18.2.0",
     "@angular/router": "^18.2.0",
+    "@angular/service-worker": "^18.2.14",
     "@ionic/angular": "^8.8.3",
     "@supabase/supabase-js": "^2.101.1",
     "jsqr": "^1.4.0",
