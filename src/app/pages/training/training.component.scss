@@ -1,7 +1,7 @@
 .training-page {
   min-height: 100vh;
-  background: #0a0a1a;
-  color: #fff;
+  background: var(--bg);
+  color: var(--text);
   font-family: 'Lexend', sans-serif;
   padding-bottom: 80px;
 }
@@ -11,9 +11,9 @@
   .logo {
     display: flex; align-items: center; gap: 8px;
     .material-icons { color: #4a6cf7; font-size: 24px; }
-    .brand { font-size: 14px; font-weight: 600; letter-spacing: 2px; color: #a0a0c0; }
+    .brand { font-size: 14px; font-weight: 600; letter-spacing: 2px; color: var(--text-sub); }
   }
-  .notification-btn, .logout-btn { background: none; border: none; color: #a0a0c0; cursor: pointer; }
+  .notification-btn, .logout-btn { background: none; border: none; color: var(--text-sub); cursor: pointer; }
 }
 
 .feedback {
@@ -43,7 +43,7 @@
 .loading-state, .empty-state {
   text-align: center;
   padding: 48px 20px;
-  color: #6a6a8a;
+  color: var(--text-muted);
 
   .material-icons {
     font-size: 48px;
@@ -59,7 +59,7 @@
 .page-title {
   padding: 0 20px 16px;
   h1 { font-size: 22px; font-weight: 700; margin-bottom: 4px; }
-  .subtitle { font-size: 13px; color: #6a6a8a; }
+  .subtitle { font-size: 13px; color: var(--text-muted); }
 }
 
 .day-selector {
@@ -74,9 +74,9 @@
   .day-btn {
     padding: 10px 16px;
     border-radius: 8px;
-    border: 1px solid #2a2a4a;
+    border: 1px solid var(--border);
     background: transparent;
-    color: #6a6a8a;
+    color: var(--text-muted);
     font-size: 12px;
     font-family: 'Lexend', sans-serif;
     font-weight: 500;
@@ -99,8 +99,8 @@
   gap: 12px;
 
   .session-card {
-    background: #12122a;
-    border: 1px solid #1e1e3e;
+    background: var(--surface);
+    border: 1px solid var(--border-sub);
     border-radius: 12px;
     padding: 16px;
 
@@ -109,7 +109,7 @@
       align-items: center;
       gap: 6px;
       font-size: 12px;
-      color: #6a6a8a;
+      color: var(--text-muted);
       margin-bottom: 10px;
 
       .material-icons { font-size: 16px; color: #4a6cf7; }
@@ -122,7 +122,7 @@
 
       .instructor {
         font-size: 12px;
-        color: #8888a8;
+        color: var(--text-hint);
         margin-bottom: 8px;
       }
 
@@ -151,7 +151,7 @@
 
         .spots-bar {
           height: 4px;
-          background: #1e1e3e;
+          background: var(--border-sub);
           border-radius: 2px;
           overflow: hidden;
           margin-bottom: 4px;
@@ -166,7 +166,7 @@
 
         .spots-text {
           font-size: 11px;
-          color: #6a6a8a;
+          color: var(--text-muted);
         }
       }
 
@@ -199,10 +199,88 @@
 
         &.full {
           background: rgba(107, 107, 127, 0.15);
-          color: #6a6a8a;
-          border: 1px solid #2a2a4a;
+          color: var(--text-muted);
+          border: 1px solid var(--border);
+        }
+
+        &.cancel {
+          background: rgba(239, 68, 68, 0.12);
+          color: #ef4444;
+          border: 1px solid rgba(239, 68, 68, 0.25);
+          font-size: 12px;
+          padding: 7px 12px;
         }
       }
+    }
+  }
+}
+
+.subscriptions-bar {
+  padding: 0 20px 8px;
+
+  .subscriptions-toggle {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    background: rgba(74, 108, 247, 0.1);
+    border: 1px solid rgba(74, 108, 247, 0.25);
+    border-radius: 10px;
+    color: #4a6cf7;
+    font-size: 13px;
+    font-weight: 600;
+    font-family: 'Lexend', sans-serif;
+    padding: 10px 16px;
+    cursor: pointer;
+    width: 100%;
+    justify-content: space-between;
+
+    .material-icons { font-size: 20px; }
+  }
+}
+
+.subscriptions-list {
+  padding: 0 20px 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+
+  .subscription-item {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    background: var(--surface);
+    border: 1px solid var(--border-sub);
+    border-radius: 10px;
+    padding: 12px 14px;
+
+    .sub-info {
+      display: flex;
+      align-items: flex-start;
+      gap: 10px;
+
+      .material-icons { color: #4a6cf7; font-size: 20px; margin-top: 2px; }
+
+      .sub-title { font-size: 14px; font-weight: 600; margin-bottom: 2px; }
+      .sub-date { font-size: 11px; color: var(--text-hint); text-transform: capitalize; }
+      .sub-time { font-size: 11px; color: var(--text-muted); }
+    }
+
+    .cancel-booking-btn {
+      display: flex;
+      align-items: center;
+      gap: 4px;
+      background: rgba(239, 68, 68, 0.1);
+      border: 1px solid rgba(239, 68, 68, 0.25);
+      border-radius: 8px;
+      color: #ef4444;
+      font-size: 11px;
+      font-weight: 600;
+      font-family: 'Lexend', sans-serif;
+      padding: 6px 10px;
+      cursor: pointer;
+      white-space: nowrap;
+
+      .material-icons { font-size: 14px; }
     }
   }
 }
@@ -210,12 +288,12 @@
 .bottom-nav {
   position: fixed; bottom: 0; left: 0; right: 0;
   display: flex; justify-content: space-around;
-  background: #0e0e20;
-  border-top: 1px solid #1e1e3e;
+  background: var(--surface-deep);
+  border-top: 1px solid var(--border-sub);
   padding: 8px 0 12px;
   .nav-item {
     display: flex; flex-direction: column; align-items: center; gap: 4px;
-    color: #4a4a6a; text-decoration: none; font-size: 10px; font-weight: 500;
+    color: var(--placeholder-2); text-decoration: none; font-size: 10px; font-weight: 500;
     .material-icons { font-size: 24px; }
     &.active { color: #4a6cf7; }
   }

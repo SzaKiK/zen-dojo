@@ -13,6 +13,7 @@ import { SupabaseService } from '../../services/supabase.service';
 export class RegisterComponent {
   fullName = '';
   email = '';
+  birthDate = '';
   password = '';
   confirmPassword = '';
   error = '';
@@ -39,7 +40,7 @@ export class RegisterComponent {
     }
 
     this.loading = true;
-    const { error } = await this.supabase.signUp(this.email, this.password, this.fullName);
+    const { error } = await this.supabase.signUp(this.email, this.password, this.fullName, this.birthDate || undefined);
     this.loading = false;
 
     if (error) {

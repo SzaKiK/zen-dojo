@@ -5,7 +5,7 @@ import { Router, RouterLink } from '@angular/router';
 import { SupabaseService, Membership, Profile } from '../../services/supabase.service';
 
 interface MembershipWithProfile extends Membership {
-  profiles?: { full_name: string; belt_level: string };
+  profiles?: { full_name: string; belt_rank: string | null };
 }
 
 @Component({
@@ -92,6 +92,12 @@ export class BerletetComponent implements OnInit {
   async toggleStatus(m: Membership) {
     const newStatus = m.status === 'active' ? 'expired' : 'active';
     await this.supabase.updateMembership(m.id, { status: newStatus });
+    await this.loadData();
+  }
+
+  async deleteMembership(m: Membership) {
+    if (!confirm(`Biztosan törlöd ezt a bérletet?`)) return;
+    await this.supabase.deleteMembership(m.id);
     await this.loadData();
   }
 

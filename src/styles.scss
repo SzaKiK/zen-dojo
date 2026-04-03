@@ -1,3 +1,47 @@
+/* ── CSS Custom Properties (Theme Tokens) ──────────────────────── */
+:root {
+  /* Dark theme — default */
+  --bg:               #0a0a1a;
+  --surface:          #12122a;
+  --surface-card:     #14142e;
+  --surface-card-alt: #1a1a3a;
+  --surface-deep:     #0e0e20;
+  --border:           #2a2a4a;
+  --border-sub:       #1e1e3e;
+  --border-light:     #1a1a30;
+  --border-muted:     #3a3a5a;
+  --text:             #ffffff;
+  --text-sub:         #a0a0c0;
+  --text-muted:       #6a6a8a;
+  --text-hint:        #8888a8;
+  --text-faint:       #c0c0e0;
+  --placeholder:      #3a3a5a;
+  --placeholder-2:    #4a4a6a;
+  --scrollbar:        #2a2a4a;
+  --overlay:          rgba(10, 10, 26, 0.7);
+}
+
+[data-theme="light"] {
+  --bg:               #f0f2f8;
+  --surface:          #ffffff;
+  --surface-card:     #ffffff;
+  --surface-card-alt: #eef0fa;
+  --surface-deep:     #f5f6fc;
+  --border:           #d4d8ef;
+  --border-sub:       #dde0f0;
+  --border-light:     #e4e7f5;
+  --border-muted:     #b0b8d8;
+  --text:             #1a1a2e;
+  --text-sub:         #5a5a7a;
+  --text-muted:       #6a6a8a;
+  --text-hint:        #8080a0;
+  --text-faint:       #4a5080;
+  --placeholder:      #b0b8d8;
+  --placeholder-2:    #9090b0;
+  --scrollbar:        #d4d8ef;
+  --overlay:          rgba(240, 242, 248, 0.85);
+}
+
 *, *::before, *::after {
   box-sizing: border-box;
   margin: 0;
@@ -7,10 +51,11 @@
 html, body {
   height: 100%;
   font-family: 'Lexend', sans-serif;
-  background: #0a0a1a;
-  color: #ffffff;
+  background: var(--bg);
+  color: var(--text);
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
+  transition: background 0.2s, color 0.2s;
 }
 
 a {
@@ -36,14 +81,23 @@ input, textarea, select {
 }
 
 ::-webkit-scrollbar-thumb {
-  background: #2a2a4a;
+  background: var(--scrollbar);
   border-radius: 2px;
 }
+
+/* Offset all page containers below the fixed global topnav */
+.welcome-page, .login-page, .register-page, .card-page,
+.training-page, .berletek-page, .admin-page, .members-page, .scanner-page {
+  padding-top: 52px;
+}
+
+/* Hide per-page logos — the global topnav already shows DHKSE */
+.header .logo { display: none !important; }
 
 .logout-btn, .login-link {
   background: none;
   border: none;
-  color: rgba(255, 255, 255, 0.7);
+  color: var(--text-sub);
   padding: 8px;
   border-radius: 50%;
   display: flex;
@@ -56,3 +110,4 @@ input, textarea, select {
     background: rgba(255, 107, 107, 0.1);
   }
 }
+

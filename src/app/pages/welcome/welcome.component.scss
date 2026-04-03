@@ -1,7 +1,7 @@
 .welcome-page {
   min-height: 100vh;
-  background: #0a0a1a;
-  color: #fff;
+  background: var(--bg);
+  color: var(--text);
   font-family: 'Lexend', sans-serif;
 }
 
@@ -25,14 +25,14 @@
       font-size: 14px;
       font-weight: 600;
       letter-spacing: 2px;
-      color: #a0a0c0;
+      color: var(--text-sub);
     }
   }
 
   .notification-btn {
     background: none;
     border: none;
-    color: #a0a0c0;
+    color: var(--text-sub);
     cursor: pointer;
   }
 }
@@ -59,7 +59,7 @@
 
     .subtitle {
       font-size: 12px;
-      color: #6a6a8a;
+      color: var(--text-muted);
       letter-spacing: 1px;
       text-transform: uppercase;
       margin-bottom: 8px;
@@ -76,7 +76,7 @@
 
     .description {
       font-size: 14px;
-      color: #8888a8;
+      color: var(--text-hint);
       line-height: 1.6;
       margin-bottom: 24px;
     }
@@ -112,17 +112,17 @@
     align-items: center;
     justify-content: center;
     background: transparent;
-    color: #a0a0c0;
+    color: var(--text-sub);
     padding: 14px 24px;
     border-radius: 8px;
-    border: 1px solid #2a2a4a;
+    border: 1px solid var(--border);
     text-decoration: none;
     font-weight: 500;
     font-size: 15px;
     transition: background 0.2s;
 
     &:hover {
-      background: #1a1a3a;
+      background: var(--surface-card-alt);
     }
   }
 }
@@ -146,7 +146,7 @@
     .stat-label {
       display: block;
       font-size: 11px;
-      color: #6a6a8a;
+      color: var(--text-muted);
       margin-top: 4px;
     }
   }
@@ -159,8 +159,8 @@
   padding: 0 20px 32px;
 
   .belt-card {
-    background: #12122a;
-    border: 1px solid #1e1e3e;
+    background: var(--surface);
+    border: 1px solid var(--border-sub);
     border-radius: 8px;
     padding: 20px;
 
@@ -182,7 +182,7 @@
 
     p {
       font-size: 13px;
-      color: #6a6a8a;
+      color: var(--text-muted);
       line-height: 1.5;
     }
   }
@@ -200,8 +200,8 @@
   .dojo-card {
     display: flex;
     gap: 14px;
-    background: #12122a;
-    border: 1px solid #1e1e3e;
+    background: var(--surface);
+    border: 1px solid var(--border-sub);
     border-radius: 12px;
     padding: 16px;
     margin-bottom: 12px;
@@ -221,8 +221,8 @@
 
     .dojo-info {
       h3 { font-size: 15px; font-weight: 600; margin-bottom: 4px; }
-      p { font-size: 13px; color: #8888a8; margin-bottom: 2px; }
-      .address { font-size: 12px; color: #6a6a8a; }
+      p { font-size: 13px; color: var(--text-hint); margin-bottom: 2px; }
+      .address { font-size: 12px; color: var(--text-muted); }
       .instructors { font-size: 11px; color: #5a5a7a; margin-top: 6px; }
     }
   }
@@ -247,15 +247,15 @@
     display: flex;
     align-items: center;
     gap: 12px;
-    background: #12122a;
-    border: 1px solid #1e1e3e;
+    background: var(--surface);
+    border: 1px solid var(--border-sub);
     border-radius: 10px;
     padding: 14px 16px;
     text-decoration: none;
-    color: #fff;
+    color: var(--text);
     transition: background 0.2s;
 
-    &:hover { background: #1a1a3a; }
+    &:hover { background: var(--surface-card-alt); }
 
     > .material-icons {
       font-size: 22px;
@@ -266,12 +266,12 @@
     div {
       flex: 1;
       h4 { font-size: 13px; font-weight: 600; margin-bottom: 2px; }
-      p { font-size: 11px; color: #6a6a8a; }
+      p { font-size: 11px; color: var(--text-muted); }
     }
 
     .arrow {
       font-size: 18px;
-      color: #3a3a5a;
+      color: var(--border-muted);
     }
   }
 }
@@ -293,8 +293,8 @@
   }
 
   .contact-card {
-    background: #12122a;
-    border: 1px solid #1e1e3e;
+    background: var(--surface);
+    border: 1px solid var(--border-sub);
     border-radius: 10px;
     padding: 16px;
     text-align: center;
@@ -307,7 +307,7 @@
 
     h4 {
       font-size: 11px;
-      color: #6a6a8a;
+      color: var(--text-muted);
       text-transform: uppercase;
       letter-spacing: 0.5px;
       margin-bottom: 6px;
@@ -315,7 +315,7 @@
 
     a, p {
       font-size: 13px;
-      color: #c0c0e0;
+      color: var(--text-sub);
       text-decoration: none;
       word-break: break-all;
     }
@@ -380,7 +380,7 @@
 .page-footer {
   text-align: center;
   padding: 24px 20px 32px;
-  border-top: 1px solid #1e1e3e;
+  border-top: 1px solid var(--border-sub);
 
   .supporter-logo {
     height: 40px;
@@ -390,6 +390,6 @@
 
   p {
     font-size: 11px;
-    color: #4a4a6a;
+    color: var(--placeholder-2);
   }
 }

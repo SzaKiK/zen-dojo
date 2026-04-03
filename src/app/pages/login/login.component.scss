@@ -1,7 +1,7 @@
 .login-page {
   min-height: 100vh;
-  background: #0a0a1a;
-  color: #fff;
+  background: var(--bg);
+  color: var(--text);
   font-family: 'Lexend', sans-serif;
 }
 
@@ -12,7 +12,7 @@
   padding: 16px 20px;
 
   .back-btn {
-    color: #a0a0c0;
+    color: var(--text-sub);
     text-decoration: none;
   }
 
@@ -22,7 +22,7 @@
     gap: 8px;
 
     .material-icons { color: #4a6cf7; font-size: 24px; }
-    .brand { font-size: 14px; font-weight: 600; letter-spacing: 2px; color: #a0a0c0; }
+    .brand { font-size: 14px; font-weight: 600; letter-spacing: 2px; color: var(--text-sub); }
   }
 }
 
@@ -36,7 +36,7 @@
   }
 
   .subtitle {
-    color: #6a6a8a;
+    color: var(--text-muted);
     font-size: 14px;
     margin-bottom: 32px;
   }
@@ -62,7 +62,7 @@
   label {
     display: block;
     font-size: 13px;
-    color: #a0a0c0;
+    color: var(--text-sub);
     margin-bottom: 8px;
     font-weight: 500;
   }
@@ -70,16 +70,16 @@
   input {
     width: 100%;
     padding: 14px 16px;
-    background: #12122a;
-    border: 1px solid #1e1e3e;
+    background: var(--surface);
+    border: 1px solid var(--border-sub);
     border-radius: 8px;
-    color: #fff;
+    color: var(--text);
     font-size: 15px;
     font-family: 'Lexend', sans-serif;
     outline: none;
     transition: border-color 0.2s;
 
-    &::placeholder { color: #3a3a5a; }
+    &::placeholder { color: var(--placeholder); }
     &:focus { border-color: #4a6cf7; }
   }
 }
@@ -109,7 +109,7 @@
   text-align: center;
   margin-top: 24px;
   font-size: 13px;
-  color: #6a6a8a;
+  color: var(--text-muted);
 
   a {
     color: #4a6cf7;

@@ -40,7 +40,13 @@
       <div class="card-body">
         <h2 class="member-name">{{ profile?.full_name }}</h2>
         <p class="member-id">ID: #{{ profile?.qr_code_id }}</p>
-        <p class="belt-level">{{ beltDisplay }}</p>
+        <p class="belt-level">{{ profile?.belt_rank || '—' }}</p>
+        @if (profile?.birth_date) {
+          <p class="birth-date">
+            <span class="material-icons">cake</span>
+            {{ formatDate(profile?.birth_date) }}
+          </p>
+        }
       </div>
 
       <div class="qr-section">
@@ -94,6 +100,128 @@
             <span class="material-icons">{{ membership.status === 'active' ? 'toggle_on' : 'toggle_off' }}</span>
             {{ membership.status === 'active' ? 'Aktív' : 'Lejárt' }}
           </button>
+        </div>
+      </div>
+    }
+
+    <!-- Admin-only member details -->
+    @if (isAdmin) {
+      <div class="admin-details-panel">
+        <h3 class="panel-title">
+          <span class="material-icons">admin_panel_settings</span>
+          Admin adatok
+        </h3>
+
+        @if (profileSaveMsg) {
+          <div class="save-msg">
+            <span class="material-icons">check_circle</span>
+            {{ profileSaveMsg }}
+          </div>
+        }
+
+        <!-- Birth date (read-only here, set at registration) -->
+        @if (profile?.birth_date) {
+          <div class="detail-row">
+            <span class="detail-label">Születési dátum</span>
+            <span class="detail-value">{{ formatDate(profile?.birth_date) }}</span>
+          </div>
+        }
+
+        <!-- Öv fokozat (belt rank kyu/dan) -->
+        <div class="detail-field">
+          <label>Öv fokozat</label>
+          <select [(ngModel)]="editBeltRank" class="field-select">
+            <option value="">-- Nincs megadva --</option>
+            @for (rank of beltRanks; track rank) {
+              <option [value]="rank">{{ rank }}</option>
+            }
+          </select>
+        </div>
+
+        <!-- Sportorvosi érvényesség -->
+        <div class="detail-field">
+          <label>Sportorvosi érvényesség</label>
+          <input type="date" [(ngModel)]="editMedicalValidity" class="field-input"
+            [class.expired]="isMedicalExpired(editMedicalValidity)"
+            [class.expiring]="isExpiringSoon(editMedicalValidity)" />
+          @if (editMedicalValidity) {
+            <span class="validity-hint"
+              [class.red]="isMedicalExpired(editMedicalValidity)"
+              [class.orange]="isExpiringSoon(editMedicalValidity)">
+              {{ isMedicalExpired(editMedicalValidity) ? 'Lejárt!' : isExpiringSoon(editMedicalValidity) ? 'Hamarosan lejár!' : 'Érvényes' }}
+            </span>
+          }
+        </div>
+
+        <!-- Éves tagsági díj -->
+        <div class="detail-field checkbox-row">
+          <span class="fee-label">Éves tagsági díj fizetve ({{ currentYear }})</span>
+          <button type="button" class="toggle-pill" [class.paid]="editMembershipFeePaid" (click)="editMembershipFeePaid = !editMembershipFeePaid">
+            <span class="material-icons">{{ editMembershipFeePaid ? 'check_circle' : 'cancel' }}</span>
+            {{ editMembershipFeePaid ? 'Fizetve' : 'Nem fizetve' }}
+          </button>
+        </div>
+
+        <button class="btn-save-admin" (click)="saveAdminProfileFields()" [disabled]="savingProfile">
+          <span class="material-icons">save</span>
+          {{ savingProfile ? 'Mentés...' : 'Mentés' }}
+        </button>
+
+        <!-- Öv vizsga dátumok -->
+        <div class="subsection">
+          <h4>Öv vizsga dátumok</h4>
+
+          @for (exam of beltExams; track exam.id) {
+            <div class="record-row">
+              <span class="material-icons record-icon">military_tech</span>
+              <div class="record-info">
+                <span class="record-main">{{ exam.belt_rank }}</span>
+                <span class="record-sub">{{ formatDate(exam.exam_date) }}</span>
+              </div>
+              <button class="del-btn" (click)="deleteBeltExam(exam.id)" title="Törlés">
+                <span class="material-icons">delete</span>
+              </button>
+            </div>
+          }
+
+          <div class="add-record-form">
+            <input type="date" [(ngModel)]="newExamDate" class="field-input half" placeholder="Dátum" />
+            <select [(ngModel)]="newExamRank" class="field-select half">
+              @for (rank of beltRanks; track rank) {
+                <option [value]="rank">{{ rank }}</option>
+              }
+            </select>
+            <button class="btn-add-record" (click)="addBeltExam()" [disabled]="!newExamDate || addingExam">
+              <span class="material-icons">add</span>
+            </button>
+          </div>
+        </div>
+
+        <!-- Edzőtábor dátumok -->
+        <div class="subsection">
+          <h4>Edzőtábor dátumok</h4>
+
+          @for (camp of trainingCamps; track camp.id) {
+            <div class="record-row">
+              <span class="material-icons record-icon">terrain</span>
+              <div class="record-info">
+                <span class="record-main">{{ formatDate(camp.camp_date) }}</span>
+                <span class="record-sub">{{ camp.description }}</span>
+              </div>
+              <button class="del-btn" (click)="deleteTrainingCamp(camp.id)" title="Törlés">
+                <span class="material-icons">delete</span>
+              </button>
+            </div>
+          }
+
+          <div class="add-record-form column">
+            <input type="date" [(ngModel)]="newCampDate" class="field-input" placeholder="Dátum" />
+            <input type="text" [(ngModel)]="newCampDesc" class="field-input" placeholder="Megjegyzés (pl. helyszín)" />
+            <button class="btn-add-record full" (click)="addTrainingCamp()" [disabled]="!newCampDate || addingCamp">
+              <span class="material-icons">add</span>
+              Hozzáadás
+            </button>
+          </div>
         </div>
       </div>
     }

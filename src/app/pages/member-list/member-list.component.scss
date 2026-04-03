@@ -1,7 +1,7 @@
 .members-page {
   min-height: 100vh;
-  background: #0a0a1a;
-  color: #fff;
+  background: var(--bg);
+  color: var(--text);
   font-family: 'Lexend', sans-serif;
   padding-bottom: 80px;
 }
@@ -11,9 +11,9 @@
   .logo {
     display: flex; align-items: center; gap: 8px;
     .material-icons { color: #4a6cf7; font-size: 24px; }
-    .brand { font-size: 14px; font-weight: 600; letter-spacing: 2px; color: #a0a0c0; }
+    .brand { font-size: 14px; font-weight: 600; letter-spacing: 2px; color: var(--text-sub); }
   }
-  .notification-btn { background: none; border: none; color: #a0a0c0; cursor: pointer; }
+  .notification-btn { background: none; border: none; color: var(--text-sub); cursor: pointer; }
 }
 
 .search-section {
@@ -23,18 +23,18 @@
 
   .search-bar {
     display: flex; align-items: center; gap: 8px;
-    background: #12122a;
-    border: 1px solid #1e1e3e;
+    background: var(--surface);
+    border: 1px solid var(--border-sub);
     border-radius: 10px;
     padding: 12px 16px;
     margin-bottom: 12px;
 
-    .material-icons { color: #4a4a6a; font-size: 20px; }
+    .material-icons { color: var(--placeholder-2); font-size: 20px; }
 
     input {
-      flex: 1; background: none; border: none; color: #fff;
+      flex: 1; background: none; border: none; color: var(--text);
       font-size: 14px; font-family: 'Lexend', sans-serif; outline: none;
-      &::placeholder { color: #4a4a6a; }
+      &::placeholder { color: var(--placeholder-2); }
     }
   }
 
@@ -44,9 +44,9 @@
     button {
       padding: 8px 16px;
       border-radius: 20px;
-      border: 1px solid #2a2a4a;
+      border: 1px solid var(--border);
       background: transparent;
-      color: #6a6a8a;
+      color: var(--text-muted);
       font-size: 12px;
       font-family: 'Lexend', sans-serif;
       font-weight: 500;
@@ -68,8 +68,8 @@
   .member-card {
     display: flex; align-items: center; gap: 14px;
     padding: 14px;
-    background: #12122a;
-    border: 1px solid #1e1e3e;
+    background: var(--surface);
+    border: 1px solid var(--border-sub);
     border-radius: 12px;
     margin-bottom: 8px;
     cursor: pointer;
@@ -77,28 +77,28 @@
     color: inherit;
     transition: background 0.2s;
 
-    &:hover { background: #1a1a3a; }
+    &:hover { background: var(--surface-card-alt); }
 
     .member-avatar {
       width: 52px; height: 52px;
       border-radius: 50%;
       object-fit: cover;
-      border: 2px solid #2a2a4a;
+      border: 2px solid var(--border);
     }
 
     .member-avatar-placeholder {
       width: 52px; height: 52px;
       border-radius: 50%;
-      border: 2px solid #2a2a4a;
-      background: #1e1e3e;
+      border: 2px solid var(--border);
+      background: var(--border-sub);
       display: flex;
       align-items: center;
       justify-content: center;
       flex-shrink: 0;
-      .material-icons { font-size: 28px; color: #4a4a6a; }
+      .material-icons { font-size: 28px; color: var(--placeholder-2); }
     }
 
-    .chevron { color: #3a3a5a; }
+    .chevron { color: var(--border-muted); }
 
     .member-info {
       flex: 1;
@@ -126,11 +126,11 @@
 
       .belt {
         font-size: 12px;
-        color: #6a6a8a;
+        color: var(--text-muted);
       }
     }
 
-    .chevron { color: #3a3a5a; }
+    .chevron { color: var(--border-muted); }
   }
 }
 
@@ -156,7 +156,7 @@
 .empty-state {
   text-align: center;
   padding: 48px 20px;
-  color: #6a6a8a;
+  color: var(--text-muted);
 
   .material-icons {
     font-size: 48px;
@@ -169,12 +169,12 @@
 .bottom-nav {
   position: fixed; bottom: 0; left: 0; right: 0;
   display: flex; justify-content: space-around;
-  background: #0e0e20;
-  border-top: 1px solid #1e1e3e;
+  background: var(--surface-deep);
+  border-top: 1px solid var(--border-sub);
   padding: 8px 0 12px;
   .nav-item {
     display: flex; flex-direction: column; align-items: center; gap: 4px;
-    color: #4a4a6a; text-decoration: none; font-size: 10px; font-weight: 500;
+    color: var(--placeholder-2); text-decoration: none; font-size: 10px; font-weight: 500;
     .material-icons { font-size: 24px; }
     &.active { color: #4a6cf7; }
   }

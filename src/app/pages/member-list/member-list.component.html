@@ -57,7 +57,7 @@
             <span class="status-badge" [class]="member.status">
               {{ member.status === 'active' ? 'Aktív' : 'Lejárt' }}
             </span>
-            <p class="belt">{{ beltName(member.belt_level) }}</p>
+            <p class="belt">{{ member.belt_rank || '—' }}</p>
           </div>
           <span class="material-icons chevron">chevron_right</span>
         </div>

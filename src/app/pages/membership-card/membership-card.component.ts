@@ -2,7 +2,7 @@ import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { Router, RouterLink, ActivatedRoute } from '@angular/router';
 import { FormsModule } from '@angular/forms';
-import { SupabaseService, Profile, Membership } from '../../services/supabase.service';
+import { SupabaseService, Profile, Membership, BeltExam, TrainingCamp, BELT_RANKS } from '../../services/supabase.service';
 import QRCode from 'qrcode';
 
 @Component({
@@ -22,14 +22,39 @@ export class MembershipCardComponent implements OnInit {
   isViewingOther = false;
   currentUserId = '';
 
+  // Admin-only member details
+  beltExams: BeltExam[] = [];
+  trainingCamps: TrainingCamp[] = [];
+  readonly beltRanks = BELT_RANKS;
+
+  // Admin edit state
+  savingProfile = false;
+  profileSaveMsg = '';
+  editBeltRank = '';
+  editMedicalValidity = '';
+  editMembershipFeePaid = false;
+
+  // New belt exam form
+  newExamDate = '';
+  newExamRank = '9.kyu';
+  addingExam = false;
+
+  // New training camp form
+  newCampDate = '';
+  newCampDesc = '';
+  addingCamp = false;
+
   // Demo data for display when Supabase is not configured
   demoProfile: Profile = {
     id: 'demo',
     full_name: 'Kovács Bence',
     avatar_url: 'https://dhkse.hu/dhkse_csoportkep.jpg',
-    belt_level: 'yellow',
+    belt_rank: '7.kyu',
     qr_code_id: 'DHKSE-2026-0891',
     is_admin: false,
+    birth_date: null,
+    medical_validity: null,
+    membership_fee_paid: false,
   };
 
   demoMembership: Membership = {
@@ -75,6 +100,17 @@ export class MembershipCardComponent implements OnInit {
             hour: '2-digit', minute: '2-digit',
           }),
         }));
+
+        // Load admin-only data when admin is viewing
+        if (this.isAdmin) {
+          [this.beltExams, this.trainingCamps] = await Promise.all([
+            this.supabase.getBeltExams(this.profile.id),
+            this.supabase.getTrainingCamps(this.profile.id),
+          ]);
+          this.editBeltRank = this.profile.belt_rank ?? '';
+          this.editMedicalValidity = this.profile.medical_validity ?? '';
+          this.editMembershipFeePaid = this.profile.membership_fee_paid ?? false;
+        }
 
         // Generate QR code
         if (this.profile.qr_code_id) {
@@ -127,22 +163,81 @@ export class MembershipCardComponent implements OnInit {
     this.membership.status = newStatus;
   }
 
+  // ── Admin profile fields ─────────────────────────────────────────
+
+  async saveAdminProfileFields() {
+    if (!this.profile || !this.isAdmin) return;
+    this.savingProfile = true;
+    const { error } = await this.supabase.updateProfile(this.profile.id, {
+      belt_rank: this.editBeltRank || null,
+      medical_validity: this.editMedicalValidity || null,
+      membership_fee_paid: this.editMembershipFeePaid,
+    });
+    this.savingProfile = false;
+    if (!error) {
+      this.profile = { ...this.profile, belt_rank: this.editBeltRank || null, medical_validity: this.editMedicalValidity || null, membership_fee_paid: this.editMembershipFeePaid };
+      this.profileSaveMsg = 'Mentve!';
+      setTimeout(() => (this.profileSaveMsg = ''), 2500);
+    }
+  }
+
+  // ── Belt exams ────────────────────────────────────────────────────
+
+  async addBeltExam() {
+    if (!this.profile || !this.newExamDate || !this.newExamRank) return;
+    this.addingExam = true;
+    await this.supabase.addBeltExam(this.profile.id, this.newExamDate, this.newExamRank);
+    this.beltExams = await this.supabase.getBeltExams(this.profile.id);
+    this.newExamDate = '';
+    this.addingExam = false;
+  }
+
+  async deleteBeltExam(id: string) {
+    await this.supabase.deleteBeltExam(id);
+    this.beltExams = this.beltExams.filter(e => e.id !== id);
+  }
+
+  // ── Training camps ────────────────────────────────────────────────
+
+  async addTrainingCamp() {
+    if (!this.profile || !this.newCampDate) return;
+    this.addingCamp = true;
+    await this.supabase.addTrainingCamp(this.profile.id, this.newCampDate, this.newCampDesc);
+    this.trainingCamps = await this.supabase.getTrainingCamps(this.profile.id);
+    this.newCampDate = '';
+    this.newCampDesc = '';
+    this.addingCamp = false;
+  }
+
+  async deleteTrainingCamp(id: string) {
+    await this.supabase.deleteTrainingCamp(id);
+    this.trainingCamps = this.trainingCamps.filter(c => c.id !== id);
+  }
+
+  formatDate(d: string | null | undefined): string {
+    if (!d) return '–';
+    return new Date(d + 'T00:00:00').toLocaleDateString('hu-HU', { year: 'numeric', month: 'long', day: 'numeric' });
+  }
+
+  isExpiringSoon(d: string | null | undefined): boolean {
+    if (!d) return false;
+    const diff = new Date(d).getTime() - Date.now();
+    return diff > 0 && diff < 60 * 24 * 3600 * 1000; // within 60 days
+  }
+
+  isMedicalExpired(d: string | null | undefined): boolean {
+    if (!d) return false;
+    return new Date(d).getTime() < Date.now();
+  }
+
+  get currentYear(): number {
+    return new Date().getFullYear();
+  }
+
   get sessionsUsed(): number {
     const m = this.membership;
     return m ? m.total_sessions - m.remaining_sessions : 0;
   }
 
-  get beltDisplay(): string {
-    const beltMap: Record<string, string> = {
-      white: 'Fehér öv • White Belt',
-      yellow: 'Sárga öv • Yellow Belt',
-      orange: 'Narancs öv • Orange Belt',
-      green: 'Zöld öv • Green Belt',
-      blue: 'Kék öv • Blue Belt',
-      purple: 'Lila öv • Purple Belt',
-      brown: 'Barna öv • Brown Belt',
-      black: 'Fekete öv • Black Belt',
-    };
-    return beltMap[this.profile?.belt_level ?? 'white'] ?? 'Fehér öv • White Belt';
-  }
 }
+

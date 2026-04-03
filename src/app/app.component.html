@@ -1,1 +1,15 @@
+<nav class="app-topnav">
+  <a routerLink="/" class="topnav-logo">
+    <span class="material-icons">shield</span>
+    <span class="brand">DHKSE</span>
+  </a>
+  <button
+    class="theme-toggle"
+    (click)="theme.toggle()"
+    [title]="theme.isDark ? 'Világos téma' : 'Sötét téma'"
+  >
+    <span class="material-icons">{{ theme.isDark ? 'light_mode' : 'dark_mode' }}</span>
+  </button>
+</nav>
+
 <router-outlet></router-outlet>

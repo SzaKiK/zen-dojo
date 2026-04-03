@@ -1,0 +1,47 @@
+.app-topnav {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  z-index: 300;
+  height: 52px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 16px;
+  background: var(--surface);
+  border-bottom: 1px solid var(--border-sub);
+  box-shadow: 0 1px 8px rgba(0, 0, 0, 0.15);
+
+  .topnav-logo {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    text-decoration: none;
+    color: var(--text);
+
+    .material-icons { color: #4a6cf7; font-size: 22px; }
+    .brand { font-size: 14px; font-weight: 700; letter-spacing: 2px; color: var(--text); }
+  }
+
+  .theme-toggle {
+    background: none;
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    width: 36px;
+    height: 36px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--text-sub);
+    cursor: pointer;
+    transition: background 0.2s, color 0.2s;
+
+    .material-icons { font-size: 18px; }
+
+    &:hover {
+      background: var(--border-sub);
+      color: var(--text);
+    }
+  }
+}

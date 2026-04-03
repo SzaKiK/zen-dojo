@@ -1,7 +1,7 @@
 .admin-page {
   min-height: 100vh;
-  background: #0a0a1a;
-  color: #fff;
+  background: var(--bg);
+  color: var(--text);
   font-family: 'Lexend', sans-serif;
   padding-bottom: 80px;
 }
@@ -14,38 +14,38 @@
   .logo {
     display: flex; align-items: center; gap: 8px;
     .material-icons { color: #4a6cf7; font-size: 24px; }
-    .brand { font-size: 14px; font-weight: 600; letter-spacing: 2px; color: #a0a0c0; }
+    .brand { font-size: 14px; font-weight: 600; letter-spacing: 2px; color: var(--text-sub); }
   }
-  .notification-btn { background: none; border: none; color: #a0a0c0; cursor: pointer; }
+  .notification-btn { background: none; border: none; color: var(--text-sub); cursor: pointer; }
 }
 
 .welcome-section {
   padding: 8px 20px 20px;
   h1 { font-size: 24px; font-weight: 700; margin-bottom: 4px; }
-  .subtitle { font-size: 14px; color: #6a6a8a; }
+  .subtitle { font-size: 14px; color: var(--text-muted); }
 }
 
 .daily-stats {
   padding: 0 20px 20px;
-  h3 { font-size: 16px; font-weight: 600; margin-bottom: 12px; color: #a0a0c0; }
+  h3 { font-size: 16px; font-weight: 600; margin-bottom: 12px; color: var(--text-sub); }
 }
 
 .attendance-card {
-  background: #12122a;
-  border: 1px solid #1e1e3e;
+  background: var(--surface);
+  border: 1px solid var(--border-sub);
   border-radius: 12px;
   padding: 20px;
 
   h4 { font-size: 16px; font-weight: 600; margin-bottom: 8px; }
 
   .attendance-desc {
-    font-size: 13px; color: #8888a8; line-height: 1.5; margin-bottom: 16px;
-    strong { color: #fff; }
+    font-size: 13px; color: var(--text-hint); line-height: 1.5; margin-bottom: 16px;
+    strong { color: var(--text); }
   }
 
   .progress-bar {
     height: 8px;
-    background: #1e1e3e;
+    background: var(--border-sub);
     border-radius: 4px;
     overflow: hidden;
     margin-bottom: 8px;
@@ -68,19 +68,19 @@
   padding: 0 20px 20px;
 
   .alert-card {
-    background: #12122a;
-    border: 1px solid #1e1e3e;
+    background: var(--surface);
+    border: 1px solid var(--border-sub);
     border-radius: 12px;
     padding: 16px;
 
     .alert-content {
       display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 8px;
-      .alert-title { font-size: 12px; color: #8888a8; }
+      .alert-title { font-size: 12px; color: var(--text-hint); }
       .alert-count { font-size: 20px; font-weight: 700; }
     }
 
     .material-icons { font-size: 20px; margin-bottom: 4px; }
-    .alert-desc { font-size: 11px; color: #6a6a8a; }
+    .alert-desc { font-size: 11px; color: var(--text-muted); }
 
     &.warning {
       .alert-count, .material-icons { color: #f59e0b; }
@@ -130,8 +130,8 @@
   .checkin-item {
     display: flex; align-items: center; gap: 12px;
     padding: 14px;
-    background: #12122a;
-    border: 1px solid #1e1e3e;
+    background: var(--surface);
+    border: 1px solid var(--border-sub);
     border-radius: 12px;
     margin-bottom: 8px;
 
@@ -146,13 +146,13 @@
     .checkin-info {
       flex: 1;
       h5 { font-size: 14px; font-weight: 600; margin-bottom: 2px; }
-      p { font-size: 12px; color: #6a6a8a; }
+      p { font-size: 12px; color: var(--text-muted); }
     }
 
     .checkin-time {
       text-align: right;
       .time { display: block; font-size: 14px; font-weight: 600; }
-      .ago { display: block; font-size: 11px; color: #6a6a8a; }
+      .ago { display: block; font-size: 11px; color: var(--text-muted); }
     }
   }
 }
@@ -160,12 +160,12 @@
 .bottom-nav {
   position: fixed; bottom: 0; left: 0; right: 0;
   display: flex; justify-content: space-around;
-  background: #0e0e20;
-  border-top: 1px solid #1e1e3e;
+  background: var(--surface-deep);
+  border-top: 1px solid var(--border-sub);
   padding: 8px 0 12px;
   .nav-item {
     display: flex; flex-direction: column; align-items: center; gap: 4px;
-    color: #4a4a6a; text-decoration: none; font-size: 10px; font-weight: 500;
+    color: var(--placeholder-2); text-decoration: none; font-size: 10px; font-weight: 500;
     .material-icons { font-size: 24px; }
     &.active { color: #4a6cf7; }
   }

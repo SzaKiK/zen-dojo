@@ -10,92 +10,297 @@
     <div class="spacer"></div>
   </header>
 
-  <section class="page-title">
-    <h1>QR Beolvasás</h1>
-    <p class="subtitle">Tartsd a kamerát a tag QR kódja elé</p>
-  </section>
+  <!-- ── STEP 1: Event selection ────────────────────────────────────── -->
+  @if (step === 'event-select') {
+    <section class="page-title">
+      <h1>QR Beolvasás</h1>
+      <p class="subtitle">Admin bérlet- és jelenlétkezelő</p>
+    </section>
 
-  <!-- Camera view -->
-  @if (!result && !cameraError) {
-    <div class="camera-container">
-      <video #videoEl autoplay muted playsinline class="camera-feed"></video>
-      <canvas #canvasEl class="scan-canvas" hidden></canvas>
-      <div class="scan-overlay">
-        <div class="scan-frame">
-          <div class="corner tl"></div>
-          <div class="corner tr"></div>
-          <div class="corner bl"></div>
-          <div class="corner br"></div>
-        </div>
-        <p class="scan-hint">Keresés...</p>
+    <!-- Event selector -->
+    <div class="event-panel">
+      <h3 class="panel-label">
+        <span class="material-icons">event</span>
+        Edzés kiválasztása (opcionális)
+      </h3>
+
+      <div class="event-date-row">
+        <label>Dátum</label>
+        <input type="date" [(ngModel)]="selectedDate" (change)="loadSubscribers()" class="date-input" />
       </div>
-      @if (processing) {
-        <div class="processing-overlay">
-          <span class="material-icons spin">sync</span>
-          <p>Feldolgozás...</p>
-        </div>
-      }
-    </div>
-  }
 
-  <!-- No camera -->
-  @if (cameraError && !result) {
-    <div class="error-container">
-      <span class="material-icons">no_photography</span>
-      <p>{{ cameraError }}</p>
-      <button class="btn-primary" (click)="scanAgain()">
-        <span class="material-icons">refresh</span>
-        Újra próbálás
+      <div class="session-chips">
+        <button
+          class="chip"
+          [class.active]="!selectedSession"
+          (click)="selectSession(null)">
+          Nincs – csak scan
+        </button>
+        @for (s of sessions; track s.id) {
+          <button
+            class="chip"
+            [class.active]="selectedSession?.id === s.id"
+            (click)="selectSession(s)">
+            {{ sessionLabel(s) }}
+          </button>
+        }
+      </div>
+    </div>
+
+    <!-- Subscriber list for selected event -->
+    @if (selectedSession) {
+      <div class="subscriber-panel">
+        <h3 class="panel-label">
+          <span class="material-icons">people</span>
+          Feliratkozott tagok
+          @if (loadingSubscribers) {
+            <span class="material-icons spin small">sync</span>
+          }
+        </h3>
+        @if (subscribers.length === 0 && !loadingSubscribers) {
+          <p class="no-subscribers">Ezen a napon még senki nem foglalt erre az edzésre.</p>
+        }
+        @for (sub of subscribers; track sub.user_id) {
+          <div class="subscriber-row" [class.appeared]="sub.appeared">
+            <div class="sub-avatar">
+              @if (sub.avatar_url) {
+                <img [src]="sub.avatar_url" [alt]="sub.full_name" />
+              } @else {
+                <span class="material-icons">person</span>
+              }
+            </div>
+            <div class="sub-info">
+              <span class="sub-name">{{ sub.full_name }}</span>
+              <span class="sub-belt">{{ sub.belt_rank || '—' }}</span>
+            </div>
+            <div class="sub-status">
+              @if (sub.appeared) {
+                <span class="appeared-badge"><span class="material-icons">check_circle</span> Megjelent</span>
+              } @else {
+                <span class="pending-badge"><span class="material-icons">schedule</span> Várható</span>
+              }
+            </div>
+          </div>
+        }
+      </div>
+    }
+
+    <!-- Start scanning button -->
+    <div class="scan-start-area">
+      <button class="btn-scan-start" (click)="startScanning()">
+        <span class="material-icons">qr_code_scanner</span>
+        {{ selectedSession ? 'QR beolvasás a megjelenéshez' : 'QR beolvasás' }}
       </button>
     </div>
   }
 
-  <!-- Scan result -->
-  @if (result) {
-    <div class="result-container">
-      <div class="checkin-badge {{ membershipStatusClass }}">
-        <span class="material-icons">{{ membershipStatusClass === 'active' ? 'check_circle' : 'cancel' }}</span>
-        <span>{{ membershipStatusClass === 'active' ? 'Sikeres becsekkolás!' : 'Bérlet probléma!' }}</span>
-      </div>
+  <!-- ── STEP 2: Camera scanning ─────────────────────────────────────── -->
+  @if (step === 'scanning') {
+    <section class="page-title">
+      <h1>QR Beolvasás</h1>
+      <p class="subtitle">Tartsd a kamerát a tag QR kódja elé</p>
+    </section>
 
+    @if (!cameraError) {
+      <div class="camera-container">
+        <video #videoEl autoplay muted playsinline class="camera-feed"></video>
+        <canvas #canvasEl class="scan-canvas" hidden></canvas>
+        <div class="scan-overlay">
+          <div class="scan-frame">
+            <div class="corner tl"></div>
+            <div class="corner tr"></div>
+            <div class="corner bl"></div>
+            <div class="corner br"></div>
+          </div>
+          <p class="scan-hint">Keresés...</p>
+        </div>
+        @if (processing) {
+          <div class="processing-overlay">
+            <span class="material-icons spin">sync</span>
+            <p>Feldolgozás...</p>
+          </div>
+        }
+      </div>
+    }
+
+    @if (cameraError) {
+      <div class="error-container">
+        <span class="material-icons">no_photography</span>
+        <p>{{ cameraError }}</p>
+        <button class="btn-primary" (click)="startCamera()">
+          <span class="material-icons">refresh</span>
+          Újra próbálás
+        </button>
+      </div>
+    }
+
+    <div class="back-row">
+      <button class="btn-ghost" (click)="backToEvents()">
+        <span class="material-icons">arrow_back</span>
+        Vissza
+      </button>
+    </div>
+  }
+
+  <!-- ── STEP 3: Member detail + membership management ───────────────── -->
+  @if (step === 'member-detail' && scannedProfile) {
+    <div class="detail-page">
       <div class="member-card">
         <div class="member-header">
           <div class="member-avatar">
-            @if (result.profile.avatar_url) {
-              <img [src]="result.profile.avatar_url" [alt]="result.profile.full_name" />
+            @if (scannedProfile.avatar_url) {
+              <img [src]="scannedProfile.avatar_url" [alt]="scannedProfile.full_name" />
             } @else {
               <span class="material-icons">person</span>
             }
           </div>
           <div class="member-info">
-            <h2>{{ result.profile.full_name }}</h2>
-            <p class="member-id">ID: {{ result.profile.qr_code_id }}</p>
+            <h2>{{ scannedProfile.full_name }}</h2>
+            <span class="belt-badge">{{ scannedProfile.belt_rank || '—' }}</span>
+            <p class="member-id">QR: {{ scannedProfile.qr_code_id }}</p>
           </div>
         </div>
 
-        <div class="membership-info">
-          <span class="material-icons">card_membership</span>
-          <div>
-            <p class="membership-label">Bérlet státusz</p>
-            <p class="membership-value {{ membershipStatusClass }}">{{ membershipStatus }}</p>
-          </div>
-        </div>
-
-        @if (result.membership?.valid_until) {
-          <div class="membership-info">
-            <span class="material-icons">event</span>
-            <div>
-              <p class="membership-label">Érvényes</p>
-              <p class="membership-value">{{ result.membership!.valid_until | date:'yyyy. MMMM d.' }}</p>
-            </div>
+        <!-- Action messages -->
+        @if (memberActionMsg) {
+          <div class="action-msg {{ memberActionType }}">
+            <span class="material-icons">{{ memberActionType === 'success' ? 'check_circle' : 'error' }}</span>
+            {{ memberActionMsg }}
           </div>
         }
+
+        <!-- Event status row -->
+        @if (selectedSession) {
+          <div class="event-status-row">
+            <div class="event-label">
+              <span class="material-icons">event</span>
+              <span>{{ selectedSession.title }} – {{ selectedSession.start_time.substring(0,5) }}</span>
+            </div>
+            @if (isSubscribedToEvent) {
+              <span class="sub-chip subscribed">
+                <span class="material-icons">bookmark</span> Foglalt
+              </span>
+            } @else {
+              <span class="sub-chip not-subscribed">
+                <span class="material-icons">bookmark_border</span> Nem foglalt
+              </span>
+            }
+          </div>
+          @if (!hasAppearedAtEvent) {
+            <button class="btn-appeared" (click)="markAppeared()" [disabled]="markingAppeared">
+              @if (markingAppeared) {
+                <span class="material-icons spin">sync</span>
+              } @else {
+                <span class="material-icons">how_to_reg</span>
+              }
+              Megjelenés rögzítése
+            </button>
+          } @else {
+            <div class="appeared-confirmed">
+              <span class="material-icons">check_circle</span>
+              Megjelenés rögzítve
+            </div>
+          }
+        }
+
+        <!-- Membership section -->
+        <div class="membership-section">
+          <h4>Bérlet</h4>
+
+          @if (scannedMembership) {
+            <div class="berlet-card {{ membershipStatusClass }}">
+              <div class="berlet-top">
+                <div>
+                  <p class="berlet-type">{{ typeLabel(scannedMembership.type) }}</p>
+                  <p class="berlet-valid">Érvényes: {{ scannedMembership.valid_until | date:'yyyy. MM. dd.' }}</p>
+                </div>
+                <div class="berlet-actions">
+                  <button class="icon-btn toggle {{ scannedMembership.status }}" (click)="toggleMembershipStatus()" title="Státusz váltása">
+                    <span class="material-icons">{{ scannedMembership.status === 'active' ? 'toggle_on' : 'toggle_off' }}</span>
+                  </button>
+                  <button class="icon-btn del" (click)="deleteMembership()" [disabled]="deletingMembership" title="Törlés">
+                    <span class="material-icons">delete</span>
+                  </button>
+                </div>
+              </div>
+
+              @if (scannedMembership.type === 'session_pass') {
+                <div class="session-row">
+                  <div class="session-bar-wrap">
+                    <div class="bar-track">
+                      <div class="bar-fill" [style.width.%]="scannedMembership.total_sessions > 0 ? (scannedMembership.remaining_sessions / scannedMembership.total_sessions) * 100 : 0"></div>
+                    </div>
+                    <span class="session-count">{{ scannedMembership.remaining_sessions }} / {{ scannedMembership.total_sessions }}</span>
+                  </div>
+                  <div class="adj-row">
+                    <button class="adj-btn minus" (click)="adjustSessions(-1)" [disabled]="scannedMembership.remaining_sessions <= 0 || adjustingSession">
+                      <span class="material-icons">remove</span>
+                    </button>
+                    <button class="adj-btn plus" (click)="adjustSessions(1)" [disabled]="adjustingSession">
+                      <span class="material-icons">add</span>
+                    </button>
+                    <button class="adj-btn edit" (click)="editingSessions = !editingSessions" title="Beállítás">
+                      <span class="material-icons">edit</span>
+                    </button>
+                  </div>
+                </div>
+                @if (editingSessions) {
+                  <div class="custom-session-row">
+                    <input type="number" [(ngModel)]="customSessionValue" min="0" class="session-input" />
+                    <button class="btn-set" (click)="setCustomSessions()">Beállít</button>
+                    <button class="btn-cancel-edit" (click)="editingSessions = false">Mégsem</button>
+                  </div>
+                }
+              }
+            </div>
+          } @else {
+            <p class="no-berlet">Nincs aktív bérlet.</p>
+          }
+
+          <!-- New membership form -->
+          <button class="btn-add-berlet" (click)="showNewMembershipForm = !showNewMembershipForm">
+            <span class="material-icons">{{ showNewMembershipForm ? 'close' : 'add' }}</span>
+            {{ showNewMembershipForm ? 'Mégsem' : 'Új bérlet' }}
+          </button>
+
+          @if (showNewMembershipForm) {
+            <div class="new-berlet-form">
+              <div class="form-row">
+                <label>Típus</label>
+                <select [(ngModel)]="newMembership.type">
+                  <option value="session_pass">Alkalombérlet</option>
+                  <option value="monthly">Havi bérlet</option>
+                  <option value="annual">Éves bérlet</option>
+                </select>
+              </div>
+              @if (newMembership.type === 'session_pass') {
+                <div class="form-row">
+                  <label>Alkalmak</label>
+                  <input type="number" [(ngModel)]="newMembership.total_sessions" min="1" max="100" />
+                </div>
+              }
+              <div class="form-row">
+                <label>Érvényes</label>
+                <input type="date" [(ngModel)]="newMembership.valid_until" />
+              </div>
+              <button class="btn-save-berlet" (click)="saveNewMembership()" [disabled]="savingMembership">
+                {{ savingMembership ? 'Mentés...' : 'Létrehoz' }}
+              </button>
+            </div>
+          }
+        </div>
       </div>
 
-      <button class="btn-primary scan-again-btn" (click)="scanAgain()">
-        <span class="material-icons">qr_code_scanner</span>
-        Következő tag beolvasása
-      </button>
+      <div class="action-buttons">
+        <button class="btn-primary" (click)="scanAgain()">
+          <span class="material-icons">qr_code_scanner</span>
+          Következő tag
+        </button>
+        <button class="btn-ghost" (click)="backToEvents()">
+          <span class="material-icons">arrow_back</span>
+          Vissza
+        </button>
+      </div>
     </div>
   }
 

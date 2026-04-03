@@ -14,6 +14,37 @@
     <p class="subtitle">Válaszd ki a napot és foglald le az edzést</p>
   </section>
 
+  <!-- Member: My subscriptions toggle -->
+  @if (!isAdmin && upcomingBookings.length > 0) {
+    <div class="subscriptions-bar">
+      <button class="subscriptions-toggle" (click)="showSubscriptions = !showSubscriptions">
+        <span class="material-icons">event_available</span>
+        Foglalásaim ({{ upcomingBookings.length }})
+        <span class="material-icons">{{ showSubscriptions ? 'expand_less' : 'expand_more' }}</span>
+      </button>
+    </div>
+    @if (showSubscriptions) {
+      <section class="subscriptions-list">
+        @for (b of upcomingBookings; track b.booking_id) {
+          <div class="subscription-item">
+            <div class="sub-info">
+              <span class="material-icons">fitness_center</span>
+              <div>
+                <p class="sub-title">{{ b.session_title }}</p>
+                <p class="sub-date">{{ bookingDayLabel(b) }}</p>
+                <p class="sub-time">{{ b.start_time.substring(0,5) }} – {{ b.end_time.substring(0,5) }}</p>
+              </div>
+            </div>
+            <button class="cancel-booking-btn" (click)="cancelBookingById(b)">
+              <span class="material-icons">event_busy</span>
+              Lemondás
+            </button>
+          </div>
+        }
+      </section>
+    }
+  }
+
   <section class="day-selector">
     @for (day of days; track day) {
       <button
@@ -67,9 +98,13 @@
             @if (isAdmin) {
               <!-- Admin: read-only view, no booking -->
             } @else if (session.booked) {
-              <button class="book-btn booked" disabled>
-                <span class="material-icons">check</span>
-                Lefoglalva
+              <button class="book-btn booked cancel" (click)="cancelSession(session)" [disabled]="session.cancelling">
+                @if (session.cancelling) {
+                  <span class="material-icons spin">sync</span>
+                } @else {
+                  <span class="material-icons">event_busy</span>
+                  Lemondás
+                }
               </button>
             } @else if (session.full) {
               <button class="book-btn full" disabled>Betelt</button>
