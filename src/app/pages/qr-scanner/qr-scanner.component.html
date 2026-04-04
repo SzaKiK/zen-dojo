@@ -224,7 +224,7 @@
                 </div>
               </div>
 
-              @if (scannedMembership.type === 'session_pass') {
+              @if (scannedMembership.type === 'kombinalt' || scannedMembership.type === 'kempo_cross' || scannedMembership.type === 'session_pass') {
                 <div class="session-row">
                   <div class="session-bar-wrap">
                     <div class="bar-track">
@@ -268,17 +268,10 @@
               <div class="form-row">
                 <label>Típus</label>
                 <select [(ngModel)]="newMembership.type">
-                  <option value="session_pass">Alkalombérlet</option>
-                  <option value="monthly">Havi bérlet</option>
-                  <option value="annual">Éves bérlet</option>
+                  <option value="kombinalt">Kombinált (10 alkalom)</option>
+                  <option value="kempo_cross">Kempo, cross (10 alkalom)</option>
                 </select>
               </div>
-              @if (newMembership.type === 'session_pass') {
-                <div class="form-row">
-                  <label>Alkalmak</label>
-                  <input type="number" [(ngModel)]="newMembership.total_sessions" min="1" max="100" />
-                </div>
-              }
               <div class="form-row">
                 <label>Érvényes</label>
                 <input type="date" [(ngModel)]="newMembership.valid_until" />

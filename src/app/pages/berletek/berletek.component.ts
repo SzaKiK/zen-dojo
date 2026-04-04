@@ -29,7 +29,7 @@ export class BerletetComponent implements OnInit {
   // New membership form
   newBerlet = {
     user_id: '',
-    type: 'session_pass' as 'monthly' | 'session_pass' | 'annual',
+    type: 'kombinalt' as 'kombinalt' | 'kempo_cross',
     total_sessions: 10,
     remaining_sessions: 10,
     valid_until: '',
@@ -75,8 +75,8 @@ export class BerletetComponent implements OnInit {
     this.saving = true;
     const { error } = await this.supabase.createMembership({
       ...this.newBerlet,
-      total_sessions: this.newBerlet.type === 'session_pass' ? this.newBerlet.total_sessions : 0,
-      remaining_sessions: this.newBerlet.type === 'session_pass' ? this.newBerlet.total_sessions : 0,
+      total_sessions: this.newBerlet.total_sessions,
+      remaining_sessions: this.newBerlet.total_sessions,
     });
     this.saving = false;
     if (error) {
@@ -117,7 +117,7 @@ export class BerletetComponent implements OnInit {
   resetForm() {
     this.newBerlet = {
       user_id: '',
-      type: 'session_pass',
+      type: 'kombinalt',
       total_sessions: 10,
       remaining_sessions: 10,
       valid_until: '',
@@ -127,8 +127,10 @@ export class BerletetComponent implements OnInit {
 
   typeLabel(type: string): string {
     const map: Record<string, string> = {
-      monthly: 'Havi bérlet',
+      kombinalt: 'Kombinált',
+      kempo_cross: 'Kempo, cross',
       session_pass: 'Alkalombérlet',
+      monthly: 'Havi bérlet',
       annual: 'Éves bérlet',
     };
     return map[type] ?? type;
@@ -140,14 +142,13 @@ export class BerletetComponent implements OnInit {
 
   statusClass(m: Membership): string {
     if (m.status === 'expired') return 'expired';
-    if (m.type === 'session_pass' && m.remaining_sessions <= 0) return 'expired';
+    if ((m.type === 'kombinalt' || m.type === 'kempo_cross' || m.type === 'session_pass') && m.remaining_sessions <= 0) return 'expired';
     return m.status;
   }
 
   statusLabel(m: Membership): string {
     if (m.status === 'expired') return 'Lejárt';
-    if (m.type === 'session_pass') return `${m.remaining_sessions} / ${m.total_sessions} alkalom`;
-    return 'Aktív';
+    return `${m.remaining_sessions} / ${m.total_sessions} alkalom`;
   }
 
   get defaultValidUntil(): string {

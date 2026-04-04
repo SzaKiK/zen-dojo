@@ -45,7 +45,7 @@ export class QrScannerComponent implements OnInit, OnDestroy {
   markingAppeared = false;
   deletingMembership = false;
   newMembership = {
-    type: 'session_pass' as 'monthly' | 'session_pass' | 'annual',
+    type: 'kombinalt' as 'kombinalt' | 'kempo_cross',
     total_sessions: 10,
     valid_until: this.defaultValidUntil,
     status: 'active' as 'active' | 'expired' | 'pending',
@@ -237,8 +237,8 @@ export class QrScannerComponent implements OnInit, OnDestroy {
     const { error } = await this.supabase.createMembership({
       user_id: this.scannedProfile.id,
       type: this.newMembership.type,
-      total_sessions: this.newMembership.type === 'session_pass' ? this.newMembership.total_sessions : 0,
-      remaining_sessions: this.newMembership.type === 'session_pass' ? this.newMembership.total_sessions : 0,
+      total_sessions: this.newMembership.total_sessions,
+      remaining_sessions: this.newMembership.total_sessions,
       valid_until: this.newMembership.valid_until,
       status: this.newMembership.status,
     });
@@ -289,21 +289,25 @@ export class QrScannerComponent implements OnInit, OnDestroy {
     const m = this.scannedMembership;
     if (!m) return 'Nincs bérlet';
     if (m.status === 'expired') return 'Lejárt bérlet';
-    if (m.type === 'session_pass') return `Alkalombérlet – ${m.remaining_sessions}/${m.total_sessions} alkalom`;
-    if (m.type === 'monthly') return 'Havi bérlet – AKTÍV';
-    if (m.type === 'annual') return 'Éves bérlet – AKTÍV';
-    return m.type;
+    return `${this.typeLabel(m.type)} – ${m.remaining_sessions}/${m.total_sessions} alkalom`;
   }
 
   get membershipStatusClass(): string {
     const m = this.scannedMembership;
     if (!m || m.status === 'expired') return 'expired';
-    if (m.type === 'session_pass' && m.remaining_sessions <= 0) return 'expired';
+    if (m.remaining_sessions <= 0) return 'expired';
     return 'active';
   }
 
   typeLabel(type: string): string {
-    return { monthly: 'Havi bérlet', session_pass: 'Alkalombérlet', annual: 'Éves bérlet' }[type] ?? type;
+    const map: Record<string, string> = {
+      kombinalt: 'Kombinált',
+      kempo_cross: 'Kempo, cross',
+      session_pass: 'Alkalombérlet',
+      monthly: 'Havi bérlet',
+      annual: 'Éves bérlet',
+    };
+    return map[type] ?? type;
   }
 
   get defaultValidUntil(): string {
