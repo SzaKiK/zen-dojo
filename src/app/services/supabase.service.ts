@@ -8,6 +8,8 @@ export const BELT_RANKS = [
   '1.dan','2.dan','3.dan','4.dan','5.dan','6.dan','7.dan','8.dan','9.dan','10.dan',
 ];
 
+export type AdminRole = 'full_admin' | 'membership_admin' | null;
+
 export interface Profile {
   id: string;
   full_name: string;
@@ -15,6 +17,7 @@ export interface Profile {
   belt_rank: string | null;
   qr_code_id: string;
   is_admin: boolean;
+  admin_role: AdminRole;
   birth_date: string | null;
   // Admin-only fields:
   medical_validity: string | null;   // Sportorvosi érvényesség
@@ -43,7 +46,7 @@ export interface Membership {
   type: string;
   total_sessions: number;
   remaining_sessions: number;
-  valid_until: string;
+  valid_until: string | null;
   status: 'active' | 'expired' | 'pending';
 }
 
@@ -51,6 +54,7 @@ export interface TrainingSession {
   id: string;
   title: string;
   instructor_name: string;
+  location?: string | null;
   level: string;
   day_of_week: number;
   start_time: string;
@@ -60,30 +64,21 @@ export interface TrainingSession {
   created_at: string;
 }
 
-export interface UserBooking {
-  booking_id: string;
-  session_id: string;
-  booking_date: string;
-  checked_in: boolean;
-  session_title: string;
-  instructor: string;
-  start_time: string;
-  end_time: string;
-  day_of_week: number;
-  level: string;
-}
-
-export interface SessionSubscriber {
-  user_id: string;
-  full_name: string;
-  belt_rank: string | null;
-  avatar_url: string;
-  appeared: boolean;
-}
-
 @Injectable({ providedIn: 'root' })
 export class SupabaseService {
   private supabase: SupabaseClient | null = null;
+
+  private getAuthRedirectUrl(path = '/'): string {
+    const fallbackBase = environment.appUrl || 'https://dhkse.netlify.app';
+    if (typeof window === 'undefined') {
+      return `${fallbackBase}${path}`;
+    }
+
+    const origin = window.location.origin;
+    const isLocalhost = origin.includes('localhost') || origin.includes('127.0.0.1');
+    const base = isLocalhost ? fallbackBase : origin;
+    return `${base}${path}`;
+  }
 
   get isMockMode(): boolean {
     return !environment.supabaseUrl || environment.supabaseUrl === 'YOUR_SUPABASE_URL';
@@ -121,7 +116,17 @@ export class SupabaseService {
     return this.supabase!.auth.signUp({
       email,
       password,
-      options: { data: { full_name: fullName, birth_date: birthDate ?? null } }
+      options: {
+        emailRedirectTo: this.getAuthRedirectUrl('/login'),
+        data: { full_name: fullName, birth_date: birthDate ?? null }
+      }
+    });
+  }
+
+  requestPasswordReset(email: string) {
+    if (this.isMockMode) return Promise.resolve({ data: null, error: null } as any);
+    return this.supabase!.auth.resetPasswordForEmail(email, {
+      redirectTo: this.getAuthRedirectUrl('/login'),
     });
   }
 
@@ -150,6 +155,18 @@ export class SupabaseService {
     return data;
   }
 
+  isFullAdmin(profile: Profile | null | undefined): boolean {
+    if (!profile) return false;
+    return profile.admin_role === 'full_admin' || (profile.admin_role == null && profile.is_admin);
+  }
+
+  isMembershipAdmin(profile: Profile | null | undefined): boolean {
+    if (!profile) return false;
+    return profile.admin_role === 'full_admin'
+      || profile.admin_role === 'membership_admin'
+      || (profile.admin_role == null && profile.is_admin);
+  }
+
   async getProfileByQR(qrCodeId: string): Promise<Profile | null> {
     if (this.isMockMode) return null;
     const { data } = await this.supabase!
@@ -175,10 +192,21 @@ export class SupabaseService {
       .from('memberships')
       .select('*')
       .eq('user_id', userId)
+      .eq('status', 'active')
       .order('created_at', { ascending: false })
       .limit(1)
       .maybeSingle();
     return data;
+  }
+
+  async getMembershipHistory(userId: string): Promise<Membership[]> {
+    if (this.isMockMode) return [];
+    const { data } = await this.supabase!
+      .from('memberships')
+      .select('*')
+      .eq('user_id', userId)
+      .order('created_at', { ascending: false });
+    return data ?? [];
   }
 
   async updateMembership(id: string, updates: Partial<Membership>) {
@@ -196,59 +224,6 @@ export class SupabaseService {
     return data ?? [];
   }
 
-  async bookSession(sessionId: string, userId: string, bookingDate?: string) {
-    if (this.isMockMode) return { error: null };
-
-    const { data, error } = await this.supabase!.rpc('book_training_session', {
-      p_session_id: sessionId,
-      p_user_id: userId,
-      p_booking_date: bookingDate ?? new Date().toISOString().split('T')[0],
-    });
-
-    if (error) return { error: { message: error.message } };
-    if (data?.error) return { error: { message: data.error } };
-    return { error: null };
-  }
-
-  async cancelBooking(sessionId: string, userId: string, bookingDate: string) {
-    if (this.isMockMode) return { error: null };
-    const { data, error } = await this.supabase!.rpc('cancel_booking', {
-      p_session_id: sessionId,
-      p_user_id: userId,
-      p_booking_date: bookingDate,
-    });
-    if (error) return { error: { message: error.message } };
-    if (data?.error) return { error: { message: data.error } };
-    return { error: null };
-  }
-
-  async getUserBookingsForDate(userId: string, date: string): Promise<string[]> {
-    if (this.isMockMode) return [];
-    const { data } = await this.supabase!
-      .from('bookings')
-      .select('session_id')
-      .eq('user_id', userId)
-      .eq('booking_date', date);
-    return (data ?? []).map((b: any) => b.session_id);
-  }
-
-  async getUserUpcomingBookings(userId: string): Promise<UserBooking[]> {
-    if (this.isMockMode) return [];
-    const { data, error } = await this.supabase!.rpc('get_user_bookings', { p_user_id: userId });
-    if (error) return [];
-    return (data as UserBooking[]) ?? [];
-  }
-
-  async getSessionSubscribers(sessionId: string, bookingDate: string): Promise<SessionSubscriber[]> {
-    if (this.isMockMode) return [];
-    const { data, error } = await this.supabase!.rpc('get_session_subscribers', {
-      p_session_id: sessionId,
-      p_booking_date: bookingDate,
-    });
-    if (error) return [];
-    return (data as SessionSubscriber[]) ?? [];
-  }
-
   async logEventAttendance(adminId: string, userId: string, sessionId: string) {
     if (this.isMockMode) return { error: null };
     const { data, error } = await this.supabase!.rpc('log_event_attendance', {
@@ -258,7 +233,13 @@ export class SupabaseService {
     });
     if (error) return { error: { message: error.message } };
     if (data?.error) return { error: { message: data.error } };
-    return { error: null };
+    return {
+      error: null,
+      data: {
+        membership_id: data?.membership_id as string | undefined,
+        remaining_sessions: data?.remaining_sessions as number | undefined,
+      },
+    };
   }
 
   // Bérletek (Memberships/Passes)
@@ -273,6 +254,12 @@ export class SupabaseService {
 
   async createMembership(membership: Omit<Membership, 'id'>) {
     if (this.isMockMode) return { error: null };
+
+    const activeMembership = await this.getMembership(membership.user_id);
+    if (activeMembership) {
+      return { error: { message: 'Egy tagnak egyszerre csak egy aktív bérlete lehet. Előbb a jelenlegi bérletet kell lezárni vagy lejártnak kell lennie.' } };
+    }
+
     return this.supabase!.from('memberships').insert(membership);
   }
 
@@ -341,10 +328,45 @@ export class SupabaseService {
     return { today: today ?? 0, total: total ?? 0 };
   }
 
+  async getAdminActionMonthlySummary() {
+    if (this.isMockMode) return [];
+    const { data } = await this.supabase!
+      .from('admin_action_monthly_summary')
+      .select('*')
+      .order('month_start', { ascending: false });
+    return data ?? [];
+  }
+
+  async getAdminActionLogs(limit = 100) {
+    if (this.isMockMode) return [];
+    const { data } = await this.supabase!
+      .from('admin_action_logs')
+      .select('*, profiles!admin_action_logs_admin_id_fkey(full_name), target_profile:profiles!admin_action_logs_target_user_id_fkey(full_name)')
+      .order('created_at', { ascending: false })
+      .limit(limit);
+    return data ?? [];
+  }
+
   // Profile update
   async updateProfile(userId: string, updates: Partial<Profile>) {
     if (this.isMockMode) return { error: null };
     return this.supabase!.from('profiles').update(updates).eq('id', userId);
+  }
+
+  async setProfileAdminRole(userId: string, role: AdminRole) {
+    if (this.isMockMode) return { error: null };
+    const { data, error } = await this.supabase!.rpc('set_profile_admin_role', {
+      p_target_user_id: userId,
+      p_admin_role: role,
+    });
+    if (error) return { error: { message: error.message } };
+    if (data?.error) return { error: { message: data.error } };
+    return { error: null };
+  }
+
+  async deleteProfile(userId: string) {
+    if (this.isMockMode) return { error: null };
+    return this.supabase!.from('profiles').delete().eq('id', userId);
   }
 
   // Belt exams

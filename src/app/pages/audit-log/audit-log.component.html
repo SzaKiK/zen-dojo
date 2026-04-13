@@ -1,0 +1,179 @@
+<div class="audit-page">
+  <header class="header">
+    <div class="logo">
+      <span class="material-icons">shield</span>
+      <span class="brand">DHKSE</span>
+    </div>
+    <a routerLink="/admin" class="back-btn" aria-label="Vissza">
+      <span class="material-icons">arrow_back</span>
+    </a>
+  </header>
+
+  <section class="page-title">
+    <h1>Műveleti napló</h1>
+    <p class="subtitle">Bérlet statisztikák és események</p>
+  </section>
+
+  @if (loading) {
+    <div class="loading-state">
+      <span class="material-icons spin">hourglass_empty</span>
+      <p>Betöltés...</p>
+    </div>
+  } @else {
+
+    <!-- Tab switcher -->
+    <div class="tabs">
+      <button class="tab" [class.active]="activeTab === 'stats'" (click)="activeTab = 'stats'">
+        <span class="material-icons">bar_chart</span>
+        Statisztikák
+      </button>
+      <button class="tab" [class.active]="activeTab === 'logs'" (click)="activeTab = 'logs'">
+        <span class="material-icons">list_alt</span>
+        Események
+      </button>
+    </div>
+
+    <!-- Stats tab -->
+    @if (activeTab === 'stats') {
+      <!-- Current month highlight -->
+      <div class="stat-hero">
+        <div class="hero-icon">
+          <span class="material-icons">card_membership</span>
+        </div>
+        <div class="hero-data">
+          <span class="hero-number">{{ currentMonthCreated }}</span>
+          <span class="hero-label">bérlet létrehozva ebben a hónapban</span>
+        </div>
+      </div>
+
+      <!-- Monthly bars -->
+      <div class="monthly-section">
+        <h2>Havi bérlet létrehozások</h2>
+        <div class="monthly-bars">
+          @for (month of monthlyBerletStats; track month.label) {
+            <div class="bar-row">
+              <span class="bar-label">{{ month.label }}</span>
+              <div class="bar-track">
+                <div class="bar-fill" [style.width.%]="month.pct">
+                  @if (month.count > 0) {
+                    <span class="bar-count">{{ month.count }}</span>
+                  }
+                </div>
+              </div>
+            </div>
+          }
+        </div>
+      </div>
+
+      <!-- Admin breakdown -->
+      <div class="monthly-section">
+        <h2>Ki hozta létre a bérleteket?</h2>
+        @if (adminBerletStats.length === 0) {
+          <p class="no-data">Nincs adat.</p>
+        } @else {
+          <div class="admin-list">
+            @for (admin of adminBerletStats; track admin.name) {
+              <div class="admin-row">
+                <div class="admin-avatar">
+                  <span class="material-icons">person</span>
+                </div>
+                <div class="admin-info">
+                  <span class="admin-name">{{ admin.name }}</span>
+                  <span class="admin-count">{{ admin.count }} bérlet</span>
+                </div>
+                <div class="admin-bar-track">
+                  <div class="admin-bar-fill" [style.width.%]="admin.pct"></div>
+                </div>
+              </div>
+            }
+          </div>
+        }
+      </div>
+
+      <!-- Summary cards -->
+      <div class="summary-cards">
+        <div class="summary-card">
+          <span class="material-icons">add_circle</span>
+          <div>
+            <span class="card-num">{{ totalCreated }}</span>
+            <span class="card-label">összes létrehozás</span>
+          </div>
+        </div>
+        <div class="summary-card">
+          <span class="material-icons">edit_note</span>
+          <div>
+            <span class="card-num">{{ totalUpdated }}</span>
+            <span class="card-label">módosítás</span>
+          </div>
+        </div>
+        <div class="summary-card">
+          <span class="material-icons">delete_outline</span>
+          <div>
+            <span class="card-num">{{ totalDeleted }}</span>
+            <span class="card-label">törlés</span>
+          </div>
+        </div>
+        <div class="summary-card">
+          <span class="material-icons">how_to_reg</span>
+          <div>
+            <span class="card-num">{{ totalAttendance }}</span>
+            <span class="card-label">jelenlét rögzítés</span>
+          </div>
+        </div>
+      </div>
+    }
+
+    <!-- Logs tab -->
+    @if (activeTab === 'logs') {
+      @if (logs.length === 0) {
+        <div class="empty-state">
+          <span class="material-icons">inbox</span>
+          <p>Nincs naplóbejegyzés.</p>
+        </div>
+      } @else {
+        <div class="log-list">
+          @for (log of logs; track log.id) {
+            <div class="log-item">
+              <div class="log-icon" [ngClass]="actionClass(log.action_type)">
+                <span class="material-icons">{{ actionIcon(log.action_type) }}</span>
+              </div>
+              <div class="log-body">
+                <p class="log-action">{{ actionLabel(log.action_type) }}</p>
+                <p class="log-detail">
+                  {{ log.profiles?.full_name || 'Admin' }}
+                  @if (log.target_profile?.full_name) {
+                    → {{ log.target_profile?.full_name }}
+                  }
+                  @if (log.membership_type) {
+                    · {{ membershipTypeLabel(log.membership_type) }}
+                  }
+                </p>
+                <p class="log-time">{{ fmtDate(log.created_at) }}</p>
+              </div>
+            </div>
+          }
+        </div>
+      }
+    }
+  }
+
+  <!-- Bottom nav -->
+  <nav class="bottom-nav">
+    <a routerLink="/admin" class="nav-item">
+      <span class="material-icons">dashboard</span>
+      <span>Vezérlőpult</span>
+    </a>
+    <a routerLink="/qr-scanner" class="nav-item">
+      <span class="material-icons">qr_code_scanner</span>
+      <span>QR Scan</span>
+    </a>
+    <a routerLink="/members" class="nav-item">
+      <span class="material-icons">group</span>
+      <span>Tagok</span>
+    </a>
+    <a routerLink="/berletek" class="nav-item">
+      <span class="material-icons">card_membership</span>
+      <span>Bérletek</span>
+    </a>
+  </nav>
+</div>

@@ -3,7 +3,7 @@ import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { RouterLink } from '@angular/router';
 import jsQR from 'jsqr';
-import { SupabaseService, Profile, Membership, TrainingSession, SessionSubscriber } from '../../services/supabase.service';
+import { SupabaseService, Profile, Membership, TrainingSession } from '../../services/supabase.service';
 
 type ScannerStep = 'event-select' | 'scanning' | 'member-detail';
 
@@ -26,13 +26,12 @@ export class QrScannerComponent implements OnInit, OnDestroy {
 
   // Admin info
   adminId = '';
+  isFullAdmin = false;
 
   // Events
   sessions: TrainingSession[] = [];
   selectedSession: TrainingSession | null = null;
   selectedDate = new Date().toISOString().split('T')[0];
-  subscribers: SessionSubscriber[] = [];
-  loadingSubscribers = false;
 
   // Scanned member
   scannedProfile: Profile | null = null;
@@ -47,7 +46,6 @@ export class QrScannerComponent implements OnInit, OnDestroy {
   newMembership = {
     type: 'kombinalt' as 'kombinalt' | 'kempo_cross',
     total_sessions: 10,
-    valid_until: this.defaultValidUntil,
     status: 'active' as 'active' | 'expired' | 'pending',
   };
   showNewMembershipForm = false;
@@ -58,7 +56,12 @@ export class QrScannerComponent implements OnInit, OnDestroy {
   async ngOnInit() {
     const { data } = await this.supabase.getSession();
     this.adminId = data?.session?.user?.id ?? '';
+    const adminProfile = this.adminId ? await this.supabase.getProfile(this.adminId) : null;
+    this.isFullAdmin = this.supabase.isFullAdmin(adminProfile);
     this.sessions = await this.supabase.getTrainingSessions();
+    if (this.availableSessions.length > 0) {
+      this.selectedSession = this.availableSessions[0];
+    }
   }
 
   ngOnDestroy() {
@@ -67,20 +70,25 @@ export class QrScannerComponent implements OnInit, OnDestroy {
 
   // ── Event selection ──────────────────────────────────────────────
 
-  selectSession(s: TrainingSession | null) {
+  selectSession(s: TrainingSession) {
     this.selectedSession = s;
-    this.subscribers = [];
-    if (s) this.loadSubscribers();
   }
 
-  async loadSubscribers() {
-    if (!this.selectedSession) return;
-    this.loadingSubscribers = true;
-    this.subscribers = await this.supabase.getSessionSubscribers(this.selectedSession.id, this.selectedDate);
-    this.loadingSubscribers = false;
+  onSelectedDateChange() {
+    if (this.selectedSession && !this.availableSessions.some(s => s.id === this.selectedSession!.id)) {
+      this.selectedSession = null;
+    }
+
+    if (!this.selectedSession && this.availableSessions.length > 0) {
+      this.selectedSession = this.availableSessions[0];
+    }
   }
 
   startScanning() {
+    if (!this.selectedSession) {
+      this.showMemberMsg('Becsekkoláshoz előbb válassz edzést.', 'error');
+      return;
+    }
     this.step = 'scanning';
     this.cameraError = '';
     setTimeout(() => this.startCamera(), 50);
@@ -146,10 +154,11 @@ export class QrScannerComponent implements OnInit, OnDestroy {
     this.scannedMembership = await this.supabase.getMembership(profile.id);
     this.customSessionValue = this.scannedMembership?.remaining_sessions ?? 0;
     this.memberActionMsg = '';
-    this.showNewMembershipForm = false;
+    this.showNewMembershipForm = !this.scannedMembership
+      || this.scannedMembership.status !== 'active'
+      || this.scannedMembership.remaining_sessions <= 0;
     this.step = 'member-detail';
     this.processing = false;
-    if (this.selectedSession) await this.loadSubscribers();
   }
 
   backToEvents() {
@@ -172,11 +181,15 @@ export class QrScannerComponent implements OnInit, OnDestroy {
 
   async toggleMembershipStatus() {
     if (!this.scannedMembership) return;
-    const newStatus = this.scannedMembership.status === 'active' ? 'expired' : 'active';
+    if (this.scannedMembership.status === 'expired') {
+      this.showMemberMsg('Lejárt bérlet nem aktiválható újra. Helyette új bérletet kell létrehozni.', 'error');
+      return;
+    }
+    const newStatus = 'expired';
     const { error } = await this.supabase.updateMembership(this.scannedMembership.id, { status: newStatus });
     if (!error) {
       this.scannedMembership = { ...this.scannedMembership, status: newStatus };
-      this.showMemberMsg(newStatus === 'active' ? 'Bérlet aktiválva.' : 'Bérlet deaktiválva.', 'success');
+      this.showMemberMsg('Bérlet inaktiválva.', 'success');
     } else {
       this.showMemberMsg('Hiba történt.', 'error');
     }
@@ -184,16 +197,22 @@ export class QrScannerComponent implements OnInit, OnDestroy {
 
   async adjustSessions(delta: number) {
     if (!this.scannedMembership) return;
+    if (this.scannedMembership.status === 'expired' && delta > 0) {
+      this.showMemberMsg('Lejárt tagsághoz új tagságot kell létrehozni.', 'error');
+      return;
+    }
     this.adjustingSession = true;
     const newRemaining = Math.max(0, this.scannedMembership.remaining_sessions + delta);
     const newTotal = delta > 0 ? Math.max(this.scannedMembership.total_sessions, newRemaining) : this.scannedMembership.total_sessions;
+    const newStatus = newRemaining <= 0 ? 'expired' : this.scannedMembership.status;
     const { error } = await this.supabase.updateMembership(this.scannedMembership.id, {
       remaining_sessions: newRemaining,
       total_sessions: newTotal,
+      status: newStatus,
     });
     this.adjustingSession = false;
     if (!error) {
-      this.scannedMembership = { ...this.scannedMembership, remaining_sessions: newRemaining, total_sessions: newTotal };
+      this.scannedMembership = { ...this.scannedMembership, remaining_sessions: newRemaining, total_sessions: newTotal, status: newStatus };
       this.customSessionValue = newRemaining;
     } else {
       this.showMemberMsg('Hiba a módosításnál.', 'error');
@@ -202,14 +221,20 @@ export class QrScannerComponent implements OnInit, OnDestroy {
 
   async setCustomSessions() {
     if (!this.scannedMembership) return;
+    if (this.scannedMembership.status === 'expired') {
+      this.showMemberMsg('Lejárt tagsághoz új tagságot kell létrehozni.', 'error');
+      return;
+    }
     const val = Math.max(0, this.customSessionValue);
     const newTotal = Math.max(this.scannedMembership.total_sessions, val);
+    const newStatus = val <= 0 ? 'expired' : this.scannedMembership.status;
     const { error } = await this.supabase.updateMembership(this.scannedMembership.id, {
       remaining_sessions: val,
       total_sessions: newTotal,
+      status: newStatus,
     });
     if (!error) {
-      this.scannedMembership = { ...this.scannedMembership, remaining_sessions: val, total_sessions: newTotal };
+      this.scannedMembership = { ...this.scannedMembership, remaining_sessions: val, total_sessions: newTotal, status: newStatus };
       this.editingSessions = false;
       this.showMemberMsg('Alkalmak frissítve.', 'success');
     } else {
@@ -233,13 +258,21 @@ export class QrScannerComponent implements OnInit, OnDestroy {
 
   async saveNewMembership() {
     if (!this.scannedProfile) return;
+    if (this.scannedProfile.admin_role || this.scannedProfile.is_admin) {
+      this.showMemberMsg('Adminokhoz (edzőkhöz) nem lehet bérletet létrehozni.', 'error');
+      return;
+    }
+    if (this.scannedMembership) {
+      this.showMemberMsg('A tagnak már van aktív bérlete. Új bérlet csak a jelenlegi lezárása vagy lejárata után hozható létre.', 'error');
+      return;
+    }
     this.savingMembership = true;
     const { error } = await this.supabase.createMembership({
       user_id: this.scannedProfile.id,
       type: this.newMembership.type,
-      total_sessions: this.newMembership.total_sessions,
-      remaining_sessions: this.newMembership.total_sessions,
-      valid_until: this.newMembership.valid_until,
+      total_sessions: 10,
+      remaining_sessions: 10,
+      valid_until: null,
       status: this.newMembership.status,
     });
     this.savingMembership = false;
@@ -252,17 +285,16 @@ export class QrScannerComponent implements OnInit, OnDestroy {
     }
   }
 
+  get canAddMembership(): boolean {
+    if (this.scannedProfile && (this.scannedProfile.admin_role || this.scannedProfile.is_admin)) return false;
+    return !this.scannedMembership;
+  }
+
+  get scannedProfileIsAdmin(): boolean {
+    return !!(this.scannedProfile && (this.scannedProfile.admin_role || this.scannedProfile.is_admin));
+  }
+
   // ── Event attendance ──────────────────────────────────────────────
-
-  get isSubscribedToEvent(): boolean {
-    if (!this.selectedSession || !this.scannedProfile) return false;
-    return this.subscribers.some(s => s.user_id === this.scannedProfile!.id);
-  }
-
-  get hasAppearedAtEvent(): boolean {
-    if (!this.selectedSession || !this.scannedProfile) return false;
-    return this.subscribers.some(s => s.user_id === this.scannedProfile!.id && s.appeared);
-  }
 
   async markAppeared() {
     if (!this.selectedSession || !this.scannedProfile) return;
@@ -270,8 +302,8 @@ export class QrScannerComponent implements OnInit, OnDestroy {
     const result = await this.supabase.logEventAttendance(this.adminId, this.scannedProfile.id, this.selectedSession.id);
     this.markingAppeared = false;
     if (!result.error) {
+      this.scannedMembership = await this.supabase.getMembership(this.scannedProfile.id);
       this.showMemberMsg('Megjelenés rögzítve!', 'success');
-      await this.loadSubscribers();
     } else {
       this.showMemberMsg(result.error.message ?? 'Hiba.', 'error');
     }
@@ -310,14 +342,53 @@ export class QrScannerComponent implements OnInit, OnDestroy {
     return map[type] ?? type;
   }
 
-  get defaultValidUntil(): string {
-    const d = new Date();
-    d.setMonth(d.getMonth() + 1);
-    return d.toISOString().split('T')[0];
+  sessionLabel(s: TrainingSession): string {
+    return `${this.dayLabel(s.day_of_week)} • ${s.start_time.substring(0, 5)}–${s.end_time.substring(0, 5)} • ${s.title} • ${this.sessionLocation(s)}`;
   }
 
-  sessionLabel(s: TrainingSession): string {
-    const days: Record<number, string> = { 1: 'H', 2: 'K', 3: 'Sze', 4: 'Cs', 5: 'P', 6: 'Szo', 0: 'V' };
-    return `${days[s.day_of_week] ?? ''} ${s.start_time.substring(0, 5)} – ${s.title}`;
+  dayLabel(dayOfWeek: number): string {
+    const days: Record<number, string> = {
+      1: 'Hétfő',
+      2: 'Kedd',
+      3: 'Szerda',
+      4: 'Csütörtök',
+      5: 'Péntek',
+      6: 'Szombat',
+      7: 'Vasárnap',
+      0: 'Vasárnap',
+    };
+    return days[dayOfWeek] ?? `Nap ${dayOfWeek}`;
+  }
+
+  private isoWeekday(dateIso: string): number {
+    const d = new Date(`${dateIso}T00:00:00`);
+    const jsDow = d.getDay();
+    return jsDow === 0 ? 7 : jsDow;
+  }
+
+  get selectedDateDayName(): string {
+    return this.dayLabel(this.isoWeekday(this.selectedDate));
+  }
+
+  get availableSessions(): TrainingSession[] {
+    const day = this.isoWeekday(this.selectedDate);
+    return this.sessions
+      .filter((s) => s.day_of_week === day)
+      .sort((a, b) => a.start_time.localeCompare(b.start_time));
+  }
+
+  sessionLocation(s: TrainingSession): string {
+    if (s.location) return s.location;
+    return s.instructor_name.includes('Rácz') ? 'Senshi Usagi, Tabajd' : 'Dojo Metzger, Bicske';
+  }
+
+  get dashboardRoute(): string {
+    return this.isFullAdmin ? '/admin' : '/berletek';
+  }
+
+  get canIncreaseSessions(): boolean {
+    if (!this.scannedMembership) return false;
+    if (this.scannedMembership.status === 'expired') return false;
+    return true;
   }
 }

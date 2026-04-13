@@ -69,48 +69,10 @@
   }
 }
 
-.subscriber-panel {
-  margin: 0 20px 16px;
-  background: var(--surface); border: 1px solid var(--border-sub); border-radius: 14px; padding: 16px;
-
-  .panel-label {
-    display: flex; align-items: center; gap: 6px;
-    font-size: 13px; font-weight: 600; color: var(--text-sub); margin-bottom: 12px;
-    .material-icons { font-size: 18px; color: #4a6cf7; }
-  }
-
-  .no-subscribers { font-size: 13px; color: var(--placeholder-2); text-align: center; padding: 12px 0; }
-
-  .subscriber-row {
-    display: flex; align-items: center; gap: 10px;
-    padding: 8px 0; border-bottom: 1px solid var(--border-light);
-    &:last-child { border-bottom: none; }
-    &.appeared { opacity: 0.7; }
-
-    .sub-avatar {
-      width: 36px; height: 36px; border-radius: 50%;
-      background: var(--border-sub); overflow: hidden;
-      display: flex; align-items: center; justify-content: center;
-      img { width: 100%; height: 100%; object-fit: cover; }
-      .material-icons { font-size: 20px; color: var(--placeholder-2); }
-    }
-
-    .sub-info { flex: 1;
-      .sub-name { font-size: 13px; font-weight: 600; display: block; margin-bottom: 2px; }
-      .sub-belt { font-size: 10px; padding: 2px 7px; border-radius: 10px;
-        background: rgba(74,108,247,0.12); color: #4a6cf7;
-      }
-    }
-
-    .sub-status {
-      .appeared-badge { font-size: 11px; color: #22c55e; display: flex; align-items: center; gap: 3px;
-        .material-icons { font-size: 14px; }
-      }
-      .pending-badge { font-size: 11px; color: var(--text-muted); display: flex; align-items: center; gap: 3px;
-        .material-icons { font-size: 14px; }
-      }
-    }
-  }
+.day-context {
+  font-size: 13px;
+  color: var(--text-muted);
+  margin-bottom: 12px;
 }
 
 .scan-start-area {
@@ -223,13 +185,6 @@
       .material-icons { font-size: 16px; color: #4a6cf7; }
     }
 
-    .sub-chip {
-      display: flex; align-items: center; gap: 4px; font-size: 11px; font-weight: 600;
-      padding: 3px 10px; border-radius: 10px;
-      .material-icons { font-size: 14px; }
-      &.subscribed { background: rgba(74,108,247,0.15); color: #4a6cf7; }
-      &.not-subscribed { background: rgba(107,107,127,0.15); color: var(--text-muted); }
-    }
   }
 
   .btn-appeared {

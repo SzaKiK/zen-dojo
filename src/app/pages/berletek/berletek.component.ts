@@ -1,7 +1,7 @@
 import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-import { Router, RouterLink } from '@angular/router';
+import { RouterLink } from '@angular/router';
 import { SupabaseService, Membership, Profile } from '../../services/supabase.service';
 
 interface MembershipWithProfile extends Membership {
@@ -24,6 +24,7 @@ export class BerletetComponent implements OnInit {
   errorMsg = '';
   successMsg = '';
   isAdmin = false;
+  isFullAdmin = false;
   currentUserId = '';
 
   // New membership form
@@ -36,21 +37,21 @@ export class BerletetComponent implements OnInit {
     status: 'active' as 'active' | 'expired' | 'pending',
   };
 
-  constructor(private supabase: SupabaseService, private router: Router) {}
-
-  async logout() {
-    await this.supabase.signOut();
-    this.router.navigate(['/']);
-  }
+  constructor(private supabase: SupabaseService) {}
 
   async ngOnInit() {
     const { data } = await this.supabase.getSession();
     if (data?.session?.user) {
       this.currentUserId = data.session.user.id;
       const profile = await this.supabase.getProfile(data.session.user.id);
-      this.isAdmin = profile?.is_admin ?? false;
+      this.isAdmin = this.supabase.isMembershipAdmin(profile);
+      this.isFullAdmin = this.supabase.isFullAdmin(profile);
     }
     await this.loadData();
+  }
+
+  get nonAdminProfiles(): Profile[] {
+    return this.profiles.filter(p => !p.admin_role && !p.is_admin);
   }
 
   async loadData() {
@@ -68,15 +69,29 @@ export class BerletetComponent implements OnInit {
   async saveBerlet() {
     this.errorMsg = '';
     this.successMsg = '';
-    if (!this.newBerlet.user_id || !this.newBerlet.valid_until) {
-      this.errorMsg = 'Töltsd ki az összes mezőt.';
+    if (!this.newBerlet.user_id) {
+      this.errorMsg = 'Válassz tagot a bérlethez.';
       return;
     }
+
+    const selectedProfile = this.profiles.find(p => p.id === this.newBerlet.user_id);
+    if (selectedProfile && (selectedProfile.admin_role || selectedProfile.is_admin)) {
+      this.errorMsg = 'Adminokhoz (edzőkhöz) nem lehet bérletet létrehozni.';
+      return;
+    }
+
+    const activeMembership = await this.supabase.getMembership(this.newBerlet.user_id);
+    if (activeMembership) {
+      this.errorMsg = 'A kiválasztott tagnak már van aktív bérlete. Új bérlet csak a jelenlegi lezárása vagy lejárata után hozható létre.';
+      return;
+    }
+
     this.saving = true;
     const { error } = await this.supabase.createMembership({
       ...this.newBerlet,
-      total_sessions: this.newBerlet.total_sessions,
-      remaining_sessions: this.newBerlet.total_sessions,
+      total_sessions: 10,
+      remaining_sessions: 10,
+      valid_until: this.newBerlet.valid_until || null,
     });
     this.saving = false;
     if (error) {
@@ -90,7 +105,11 @@ export class BerletetComponent implements OnInit {
   }
 
   async toggleStatus(m: Membership) {
-    const newStatus = m.status === 'active' ? 'expired' : 'active';
+    if (m.status === 'expired') {
+      this.errorMsg = 'Lejárt bérlet nem aktiválható újra. Helyette új bérletet kell létrehozni.';
+      return;
+    }
+    const newStatus = 'expired';
     await this.supabase.updateMembership(m.id, { status: newStatus });
     await this.loadData();
   }
@@ -102,16 +121,23 @@ export class BerletetComponent implements OnInit {
   }
 
   async adjustSessions(m: MembershipWithProfile, delta: number) {
+    if (m.status === 'expired' && delta > 0) {
+      this.errorMsg = 'Lejárt bérlethez új bérletet kell létrehozni.';
+      return;
+    }
     const newRemaining = Math.max(0, m.remaining_sessions + delta);
     const newTotal = delta > 0
       ? Math.max(m.total_sessions, newRemaining)
       : m.total_sessions;
+    const newStatus = newRemaining <= 0 ? 'expired' : m.status;
     await this.supabase.updateMembership(m.id, {
       remaining_sessions: newRemaining,
       total_sessions: newTotal,
+      status: newStatus,
     });
     m.remaining_sessions = newRemaining;
     m.total_sessions = newTotal;
+    m.status = newStatus;
   }
 
   resetForm() {
@@ -123,6 +149,15 @@ export class BerletetComponent implements OnInit {
       valid_until: '',
       status: 'active',
     };
+  }
+
+  selectedUserHasActiveMembership(): boolean {
+    if (!this.newBerlet.user_id) return false;
+    return this.memberships.some(m => m.user_id === this.newBerlet.user_id && m.status === 'active');
+  }
+
+  get headerRoute(): string {
+    return this.isAdmin ? '/admin' : '/membership-card';
   }
 
   typeLabel(type: string): string {
@@ -149,6 +184,11 @@ export class BerletetComponent implements OnInit {
   statusLabel(m: Membership): string {
     if (m.status === 'expired') return 'Lejárt';
     return `${m.remaining_sessions} / ${m.total_sessions} alkalom`;
+  }
+
+  canIncreaseSessions(m: Membership): boolean {
+    if (m.status === 'expired') return false;
+    return true;
   }
 
   get defaultValidUntil(): string {

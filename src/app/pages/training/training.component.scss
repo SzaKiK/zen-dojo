@@ -16,30 +16,6 @@
   .notification-btn, .logout-btn { background: none; border: none; color: var(--text-sub); cursor: pointer; }
 }
 
-.feedback {
-  margin: 0 20px 12px;
-  padding: 10px 16px;
-  border-radius: 8px;
-  font-size: 13px;
-  font-weight: 500;
-  display: flex;
-  align-items: center;
-  gap: 8px;
-
-  .material-icons { font-size: 18px; }
-
-  &.success {
-    background: rgba(34, 197, 94, 0.12);
-    color: #22c55e;
-    border: 1px solid rgba(34, 197, 94, 0.25);
-  }
-  &.error {
-    background: rgba(239, 68, 68, 0.12);
-    color: #ef4444;
-    border: 1px solid rgba(239, 68, 68, 0.25);
-  }
-}
-
 .loading-state, .empty-state {
   text-align: center;
   padding: 48px 20px;
@@ -72,7 +48,7 @@
   &::-webkit-scrollbar { display: none; }
 
   .day-btn {
-    padding: 10px 16px;
+    padding: 10px 14px;
     border-radius: 8px;
     border: 1px solid var(--border);
     background: transparent;
@@ -83,6 +59,20 @@
     cursor: pointer;
     white-space: nowrap;
     transition: all 0.2s;
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+
+    .day-name {
+      font-size: 12px;
+      font-weight: 600;
+    }
+
+    .day-date {
+      font-size: 11px;
+      opacity: 0.85;
+      text-transform: capitalize;
+    }
 
     &.active {
       background: linear-gradient(135deg, #1132d4, #4a6cf7);
@@ -170,117 +160,12 @@
         }
       }
 
-      .book-btn {
-        padding: 8px 20px;
-        background: linear-gradient(135deg, #1132d4, #4a6cf7);
-        border: none;
-        border-radius: 8px;
-        color: #fff;
-        font-size: 13px;
-        font-weight: 600;
-        font-family: 'Lexend', sans-serif;
-        cursor: pointer;
-        transition: opacity 0.2s;
-        display: flex;
-        align-items: center;
-        gap: 4px;
-
-        .material-icons { font-size: 16px; }
-
-        &:hover:not(:disabled) { opacity: 0.9; }
-
-        &:disabled { cursor: default; opacity: 0.9; }
-
-        &.booked {
-          background: rgba(34, 197, 94, 0.15);
-          color: #22c55e;
-          border: 1px solid rgba(34, 197, 94, 0.3);
-        }
-
-        &.full {
-          background: rgba(107, 107, 127, 0.15);
-          color: var(--text-muted);
-          border: 1px solid var(--border);
-        }
-
-        &.cancel {
-          background: rgba(239, 68, 68, 0.12);
-          color: #ef4444;
-          border: 1px solid rgba(239, 68, 68, 0.25);
+      .spots.info-only {
+        .spots-text {
           font-size: 12px;
-          padding: 7px 12px;
+          color: var(--text-hint);
         }
       }
-    }
-  }
-}
-
-.subscriptions-bar {
-  padding: 0 20px 8px;
-
-  .subscriptions-toggle {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    background: rgba(74, 108, 247, 0.1);
-    border: 1px solid rgba(74, 108, 247, 0.25);
-    border-radius: 10px;
-    color: #4a6cf7;
-    font-size: 13px;
-    font-weight: 600;
-    font-family: 'Lexend', sans-serif;
-    padding: 10px 16px;
-    cursor: pointer;
-    width: 100%;
-    justify-content: space-between;
-
-    .material-icons { font-size: 20px; }
-  }
-}
-
-.subscriptions-list {
-  padding: 0 20px 16px;
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
-
-  .subscription-item {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    background: var(--surface);
-    border: 1px solid var(--border-sub);
-    border-radius: 10px;
-    padding: 12px 14px;
-
-    .sub-info {
-      display: flex;
-      align-items: flex-start;
-      gap: 10px;
-
-      .material-icons { color: #4a6cf7; font-size: 20px; margin-top: 2px; }
-
-      .sub-title { font-size: 14px; font-weight: 600; margin-bottom: 2px; }
-      .sub-date { font-size: 11px; color: var(--text-hint); text-transform: capitalize; }
-      .sub-time { font-size: 11px; color: var(--text-muted); }
-    }
-
-    .cancel-booking-btn {
-      display: flex;
-      align-items: center;
-      gap: 4px;
-      background: rgba(239, 68, 68, 0.1);
-      border: 1px solid rgba(239, 68, 68, 0.25);
-      border-radius: 8px;
-      color: #ef4444;
-      font-size: 11px;
-      font-weight: 600;
-      font-family: 'Lexend', sans-serif;
-      padding: 6px 10px;
-      cursor: pointer;
-      white-space: nowrap;
-
-      .material-icons { font-size: 14px; }
     }
   }
 }

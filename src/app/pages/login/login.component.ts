@@ -34,8 +34,10 @@ export class LoginComponent {
     const userId = data?.session?.user?.id;
     if (userId) {
       const profile = await this.supabase.getProfile(userId);
-      if (profile?.is_admin) {
+      if (this.supabase.isFullAdmin(profile)) {
         this.router.navigate(['/admin']);
+      } else if (this.supabase.isMembershipAdmin(profile)) {
+        this.router.navigate(['/berletek']);
       } else {
         this.router.navigate(['/membership-card']);
       }

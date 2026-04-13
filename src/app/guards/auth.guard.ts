@@ -16,6 +16,16 @@ export const adminGuard = async () => {
   const { data } = await supabase.getSession();
   if (!data?.session) return router.createUrlTree(['/login']);
   const profile = await supabase.getProfile(data.session.user.id);
-  if (profile?.is_admin) return true;
+  if (supabase.isMembershipAdmin(profile)) return true;
+  return router.createUrlTree(['/membership-card']);
+};
+
+export const fullAdminGuard = async () => {
+  const supabase = inject(SupabaseService);
+  const router = inject(Router);
+  const { data } = await supabase.getSession();
+  if (!data?.session) return router.createUrlTree(['/login']);
+  const profile = await supabase.getProfile(data.session.user.id);
+  if (supabase.isFullAdmin(profile)) return true;
   return router.createUrlTree(['/membership-card']);
 };

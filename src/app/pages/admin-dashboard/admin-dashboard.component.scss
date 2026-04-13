@@ -124,7 +124,15 @@
   .section-header {
     display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;
     h4 { font-size: 16px; font-weight: 600; }
-    .view-all { font-size: 13px; color: #4a6cf7; text-decoration: none; }
+    .view-all {
+      font-size: 13px;
+      color: #4a6cf7;
+      text-decoration: none;
+      background: none;
+      border: none;
+      font-family: 'Lexend', sans-serif;
+      cursor: pointer;
+    }
   }
 
   .checkin-item {

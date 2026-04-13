@@ -1,6 +1,6 @@
 <div class="scanner-page">
   <header class="header">
-    <a routerLink="/admin" class="back-btn">
+    <a [routerLink]="dashboardRoute" class="back-btn">
       <span class="material-icons">arrow_back</span>
     </a>
     <div class="logo">
@@ -14,29 +14,25 @@
   @if (step === 'event-select') {
     <section class="page-title">
       <h1>QR Beolvasás</h1>
-      <p class="subtitle">Admin bérlet- és jelenlétkezelő</p>
+      <p class="subtitle">Jelenlétkezelő</p>
     </section>
 
     <!-- Event selector -->
     <div class="event-panel">
       <h3 class="panel-label">
         <span class="material-icons">event</span>
-        Edzés kiválasztása (opcionális)
+        Edzés kiválasztása (kötelező)
       </h3>
 
       <div class="event-date-row">
         <label>Dátum</label>
-        <input type="date" [(ngModel)]="selectedDate" (change)="loadSubscribers()" class="date-input" />
+        <input type="date" [(ngModel)]="selectedDate" (change)="onSelectedDateChange()" class="date-input" />
       </div>
 
+      <p class="day-context">Kiválasztott nap: <strong>{{ selectedDateDayName }}</strong></p>
+
       <div class="session-chips">
-        <button
-          class="chip"
-          [class.active]="!selectedSession"
-          (click)="selectSession(null)">
-          Nincs – csak scan
-        </button>
-        @for (s of sessions; track s.id) {
+        @for (s of availableSessions; track s.id) {
           <button
             class="chip"
             [class.active]="selectedSession?.id === s.id"
@@ -44,52 +40,17 @@
             {{ sessionLabel(s) }}
           </button>
         }
+        @if (availableSessions.length === 0) {
+          <p class="day-context">Erre a napra nincs beállított fix edzés.</p>
+        }
       </div>
     </div>
-
-    <!-- Subscriber list for selected event -->
-    @if (selectedSession) {
-      <div class="subscriber-panel">
-        <h3 class="panel-label">
-          <span class="material-icons">people</span>
-          Feliratkozott tagok
-          @if (loadingSubscribers) {
-            <span class="material-icons spin small">sync</span>
-          }
-        </h3>
-        @if (subscribers.length === 0 && !loadingSubscribers) {
-          <p class="no-subscribers">Ezen a napon még senki nem foglalt erre az edzésre.</p>
-        }
-        @for (sub of subscribers; track sub.user_id) {
-          <div class="subscriber-row" [class.appeared]="sub.appeared">
-            <div class="sub-avatar">
-              @if (sub.avatar_url) {
-                <img [src]="sub.avatar_url" [alt]="sub.full_name" />
-              } @else {
-                <span class="material-icons">person</span>
-              }
-            </div>
-            <div class="sub-info">
-              <span class="sub-name">{{ sub.full_name }}</span>
-              <span class="sub-belt">{{ sub.belt_rank || '—' }}</span>
-            </div>
-            <div class="sub-status">
-              @if (sub.appeared) {
-                <span class="appeared-badge"><span class="material-icons">check_circle</span> Megjelent</span>
-              } @else {
-                <span class="pending-badge"><span class="material-icons">schedule</span> Várható</span>
-              }
-            </div>
-          </div>
-        }
-      </div>
-    }
 
     <!-- Start scanning button -->
     <div class="scan-start-area">
       <button class="btn-scan-start" (click)="startScanning()">
         <span class="material-icons">qr_code_scanner</span>
-        {{ selectedSession ? 'QR beolvasás a megjelenéshez' : 'QR beolvasás' }}
+        QR beolvasás a megjelenéshez
       </button>
     </div>
   }
@@ -174,33 +135,17 @@
           <div class="event-status-row">
             <div class="event-label">
               <span class="material-icons">event</span>
-              <span>{{ selectedSession.title }} – {{ selectedSession.start_time.substring(0,5) }}</span>
+              <span>{{ sessionLabel(selectedSession) }}</span>
             </div>
-            @if (isSubscribedToEvent) {
-              <span class="sub-chip subscribed">
-                <span class="material-icons">bookmark</span> Foglalt
-              </span>
-            } @else {
-              <span class="sub-chip not-subscribed">
-                <span class="material-icons">bookmark_border</span> Nem foglalt
-              </span>
-            }
           </div>
-          @if (!hasAppearedAtEvent) {
-            <button class="btn-appeared" (click)="markAppeared()" [disabled]="markingAppeared">
-              @if (markingAppeared) {
-                <span class="material-icons spin">sync</span>
-              } @else {
-                <span class="material-icons">how_to_reg</span>
-              }
-              Megjelenés rögzítése
-            </button>
-          } @else {
-            <div class="appeared-confirmed">
-              <span class="material-icons">check_circle</span>
-              Megjelenés rögzítve
-            </div>
-          }
+          <button class="btn-appeared" (click)="markAppeared()" [disabled]="markingAppeared">
+            @if (markingAppeared) {
+              <span class="material-icons spin">sync</span>
+            } @else {
+              <span class="material-icons">how_to_reg</span>
+            }
+            Megjelenés rögzítése
+          </button>
         }
 
         <!-- Membership section -->
@@ -212,16 +157,18 @@
               <div class="berlet-top">
                 <div>
                   <p class="berlet-type">{{ typeLabel(scannedMembership.type) }}</p>
-                  <p class="berlet-valid">Érvényes: {{ scannedMembership.valid_until | date:'yyyy. MM. dd.' }}</p>
+                  <p class="berlet-valid">Érvényes: {{ scannedMembership.valid_until ? (scannedMembership.valid_until | date:'yyyy. MM. dd.') : 'Nincs megadva' }}</p>
                 </div>
-                <div class="berlet-actions">
-                  <button class="icon-btn toggle {{ scannedMembership.status }}" (click)="toggleMembershipStatus()" title="Státusz váltása">
-                    <span class="material-icons">{{ scannedMembership.status === 'active' ? 'toggle_on' : 'toggle_off' }}</span>
-                  </button>
-                  <button class="icon-btn del" (click)="deleteMembership()" [disabled]="deletingMembership" title="Törlés">
-                    <span class="material-icons">delete</span>
-                  </button>
-                </div>
+                @if (isFullAdmin) {
+                  <div class="berlet-actions">
+                    <button class="icon-btn toggle {{ scannedMembership.status }}" (click)="toggleMembershipStatus()" title="Státusz váltása">
+                      <span class="material-icons">{{ scannedMembership.status === 'active' ? 'toggle_on' : 'toggle_off' }}</span>
+                    </button>
+                    <button class="icon-btn del" (click)="deleteMembership()" [disabled]="deletingMembership" title="Törlés">
+                      <span class="material-icons">delete</span>
+                    </button>
+                  </div>
+                }
               </div>
 
               @if (scannedMembership.type === 'kombinalt' || scannedMembership.type === 'kempo_cross' || scannedMembership.type === 'session_pass') {
@@ -232,19 +179,21 @@
                     </div>
                     <span class="session-count">{{ scannedMembership.remaining_sessions }} / {{ scannedMembership.total_sessions }}</span>
                   </div>
-                  <div class="adj-row">
-                    <button class="adj-btn minus" (click)="adjustSessions(-1)" [disabled]="scannedMembership.remaining_sessions <= 0 || adjustingSession">
-                      <span class="material-icons">remove</span>
-                    </button>
-                    <button class="adj-btn plus" (click)="adjustSessions(1)" [disabled]="adjustingSession">
-                      <span class="material-icons">add</span>
-                    </button>
-                    <button class="adj-btn edit" (click)="editingSessions = !editingSessions" title="Beállítás">
-                      <span class="material-icons">edit</span>
-                    </button>
-                  </div>
+                  @if (isFullAdmin) {
+                    <div class="adj-row">
+                      <button class="adj-btn minus" (click)="adjustSessions(-1)" [disabled]="scannedMembership.remaining_sessions <= 0 || adjustingSession">
+                        <span class="material-icons">remove</span>
+                      </button>
+                      <button class="adj-btn plus" (click)="adjustSessions(1)" [disabled]="adjustingSession || !canIncreaseSessions">
+                        <span class="material-icons">add</span>
+                      </button>
+                      <button class="adj-btn edit" (click)="editingSessions = !editingSessions" title="Beállítás">
+                        <span class="material-icons">edit</span>
+                      </button>
+                    </div>
+                  }
                 </div>
-                @if (editingSessions) {
+                @if (isFullAdmin && editingSessions) {
                   <div class="custom-session-row">
                     <input type="number" [(ngModel)]="customSessionValue" min="0" class="session-input" />
                     <button class="btn-set" (click)="setCustomSessions()">Beállít</button>
@@ -258,28 +207,30 @@
           }
 
           <!-- New membership form -->
-          <button class="btn-add-berlet" (click)="showNewMembershipForm = !showNewMembershipForm">
-            <span class="material-icons">{{ showNewMembershipForm ? 'close' : 'add' }}</span>
-            {{ showNewMembershipForm ? 'Mégsem' : 'Új bérlet' }}
-          </button>
+          @if (canAddMembership) {
+            <button class="btn-add-berlet" (click)="showNewMembershipForm = !showNewMembershipForm">
+              <span class="material-icons">{{ showNewMembershipForm ? 'close' : 'add' }}</span>
+              {{ showNewMembershipForm ? 'Mégsem' : 'Új bérlet' }}
+            </button>
 
-          @if (showNewMembershipForm) {
-            <div class="new-berlet-form">
-              <div class="form-row">
-                <label>Típus</label>
-                <select [(ngModel)]="newMembership.type">
-                  <option value="kombinalt">Kombinált (10 alkalom)</option>
-                  <option value="kempo_cross">Kempo, cross (10 alkalom)</option>
-                </select>
+            @if (showNewMembershipForm) {
+              <div class="new-berlet-form">
+                <div class="form-row">
+                  <label>Típus</label>
+                  <select [(ngModel)]="newMembership.type">
+                    <option value="kombinalt">Kombinált (10 alkalom)</option>
+                    <option value="kempo_cross">Kempo, cross (10 alkalom)</option>
+                  </select>
+                </div>
+                <button class="btn-save-berlet" (click)="saveNewMembership()" [disabled]="savingMembership">
+                  {{ savingMembership ? 'Mentés...' : 'Létrehoz' }}
+                </button>
               </div>
-              <div class="form-row">
-                <label>Érvényes</label>
-                <input type="date" [(ngModel)]="newMembership.valid_until" />
-              </div>
-              <button class="btn-save-berlet" (click)="saveNewMembership()" [disabled]="savingMembership">
-                {{ savingMembership ? 'Mentés...' : 'Létrehoz' }}
-              </button>
-            </div>
+            }
+          } @else if (scannedProfileIsAdmin) {
+            <p class="no-berlet">Admin (edző) részére nem hozható létre bérlet.</p>
+          } @else if (!canAddMembership) {
+            <p class="no-berlet">A tagnak már van aktív bérlete. Új csak a jelenlegi elfogyása vagy lezárása után hozható létre.</p>
           }
         </div>
       </div>
@@ -298,21 +249,32 @@
   }
 
   <nav class="bottom-nav">
-    <a routerLink="/admin" class="nav-item">
+    <a [routerLink]="dashboardRoute" class="nav-item">
       <span class="material-icons">dashboard</span>
-      <span>Vezérlőpult</span>
+      <span>{{ isFullAdmin ? 'Vezérlőpult' : 'Bérletek' }}</span>
     </a>
     <a routerLink="/qr-scanner" class="nav-item active">
       <span class="material-icons">qr_code_scanner</span>
       <span>QR Scan</span>
     </a>
-    <a routerLink="/members" class="nav-item">
-      <span class="material-icons">group</span>
-      <span>Tagok</span>
-    </a>
-    <a routerLink="/berletek" class="nav-item">
-      <span class="material-icons">card_membership</span>
-      <span>Bérletek</span>
-    </a>
+    @if (isFullAdmin) {
+      <a routerLink="/members" class="nav-item">
+        <span class="material-icons">group</span>
+        <span>Tagok</span>
+      </a>
+      <a routerLink="/berletek" class="nav-item">
+        <span class="material-icons">card_membership</span>
+        <span>Bérletek</span>
+      </a>
+    } @else {
+      <a routerLink="/members" class="nav-item">
+        <span class="material-icons">group</span>
+        <span>Tagok</span>
+      </a>
+      <a routerLink="/training" class="nav-item">
+        <span class="material-icons">fitness_center</span>
+        <span>Edzések</span>
+      </a>
+    }
   </nav>
 </div>

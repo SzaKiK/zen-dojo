@@ -4,24 +4,24 @@
       <span class="material-icons">shield</span>
       <span class="brand">DHKSE</span>
     </div>
-    <button class="logout-btn" (click)="logout()">
-      <span class="material-icons">logout</span>
-    </button>
+    <a routerLink="/" class="back-btn" aria-label="Vissza a főoldalra">
+      <span class="material-icons">arrow_back</span>
+    </a>
   </header>
 
   <section class="welcome-section">
-    <h1>Admin Vezérlőpult</h1>
-    <p class="subtitle">Üdvözöljük újra a dojóban, Shihan.</p>
+    <h1>Edzői Vezérlőpult</h1>
+    <p class="subtitle">Heti aktivitás és bérletkezelés áttekintése.</p>
   </section>
 
   <section class="daily-stats">
     <h3>Napi látogatottság</h3>
 
     <div class="attendance-card">
-      <h4>Jelenléti Napló</h4>
+      <h4>Mai aktivitás</h4>
       <p class="attendance-desc">
         Ma eddig <strong>{{ totalToday }}</strong> becsekkolás történt
-        <strong>{{ totalMembers }}</strong> regisztrált tagból.
+        <strong>{{ totalMembers }}</strong> regisztrált tanulóból.
       </p>
 
       <div class="progress-bar">
@@ -34,11 +34,11 @@
   <section class="alerts">
     <div class="alert-card warning">
       <div class="alert-content">
-        <span class="alert-title">Lejáró bérletek</span>
-        <span class="alert-count">{{ expiringCount }}</span>
+        <span class="alert-title">Aktív bérletek</span>
+        <span class="alert-count">{{ activeMembershipCount }}</span>
       </div>
-      <span class="material-icons">warning</span>
-      <p class="alert-desc">Következő 7 napban</p>
+      <span class="material-icons">card_membership</span>
+      <p class="alert-desc">Megmaradt alkalommal</p>
     </div>
 
     <div class="alert-card info">
@@ -47,7 +47,7 @@
         <span class="alert-count">{{ totalMembers }}</span>
       </div>
       <span class="material-icons">group</span>
-      <p class="alert-desc">Regisztrált tagok</p>
+      <p class="alert-desc">Regisztrált tanulók</p>
     </div>
   </section>
 
@@ -70,16 +70,22 @@
         <span class="material-icons">fitness_center</span>
         Edzések
       </button>
+      <button class="action-btn" routerLink="/audit">
+        <span class="material-icons">history</span>
+        Műveleti napló
+      </button>
     </div>
   </section>
 
   <section class="recent-checkins">
     <div class="section-header">
       <h4>Friss Becsekkolások</h4>
-      <a routerLink="/members" class="view-all">Összes mutatása</a>
+      <button class="view-all" type="button" (click)="toggleShowAllCheckins()">
+        {{ showAllCheckins ? 'Kevesebb mutatása' : 'Összes mutatása' }}
+      </button>
     </div>
 
-    @for (checkin of recentCheckins; track checkin.name) {
+    @for (checkin of displayedCheckins; track checkin.name + checkin.time) {
       <div class="checkin-item">
         <div class="checkin-avatar">{{ checkin.initials }}</div>
         <div class="checkin-info">

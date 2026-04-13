@@ -15,10 +15,13 @@ import QRCode from 'qrcode';
 export class MembershipCardComponent implements OnInit {
   profile: Profile | null = null;
   membership: Membership | null = null;
+  membershipHistory: Membership[] = [];
   recentSessions: { title: string; date: string }[] = [];
   loading = true;
   qrDataUrl = '';
   isAdmin = false;
+  isFullAdmin = false;
+  canManageMembership = false;
   isViewingOther = false;
   currentUserId = '';
 
@@ -44,6 +47,18 @@ export class MembershipCardComponent implements OnInit {
   newCampDesc = '';
   addingCamp = false;
 
+  showNewMembershipForm = false;
+  creatingMembership = false;
+  memberActionMsg = '';
+  memberActionType: 'success' | 'error' = 'success';
+
+  newMembership = {
+    type: 'kombinalt' as 'kombinalt' | 'kempo_cross',
+    total_sessions: 10,
+    valid_until: '',
+    status: 'active' as 'active' | 'expired' | 'pending',
+  };
+
   // Demo data for display when Supabase is not configured
   demoProfile: Profile = {
     id: 'demo',
@@ -52,6 +67,7 @@ export class MembershipCardComponent implements OnInit {
     belt_rank: '7.kyu',
     qr_code_id: 'DHKSE-2026-0891',
     is_admin: false,
+    admin_role: null,
     birth_date: null,
     medical_validity: null,
     membership_fee_paid: false,
@@ -78,11 +94,13 @@ export class MembershipCardComponent implements OnInit {
     if (data?.session?.user) {
       this.currentUserId = data.session.user.id;
       const currentProfile = await this.supabase.getProfile(data.session.user.id);
-      this.isAdmin = currentProfile?.is_admin ?? false;
+      this.canManageMembership = this.supabase.isMembershipAdmin(currentProfile);
+      this.isFullAdmin = this.supabase.isFullAdmin(currentProfile);
+      this.isAdmin = this.isFullAdmin;
 
       // Check if viewing another user's profile (admin feature)
       const targetUserId = this.route.snapshot.paramMap.get('userId');
-      if (targetUserId && this.isAdmin && targetUserId !== this.currentUserId) {
+      if (targetUserId && this.canManageMembership && targetUserId !== this.currentUserId) {
         this.isViewingOther = true;
         this.profile = await this.supabase.getProfile(targetUserId);
       } else {
@@ -90,7 +108,10 @@ export class MembershipCardComponent implements OnInit {
       }
 
       if (this.profile) {
-        this.membership = await this.supabase.getMembership(this.profile.id);
+        [this.membership, this.membershipHistory] = await Promise.all([
+          this.supabase.getMembership(this.profile.id),
+          this.supabase.getMembershipHistory(this.profile.id),
+        ]);
         const attendance = await this.supabase.getUserAttendance(this.profile.id, 5);
         this.recentSessions = attendance.map((a: any) => ({
           title: a.training_sessions?.title ?? 'Edzés',
@@ -102,7 +123,7 @@ export class MembershipCardComponent implements OnInit {
         }));
 
         // Load admin-only data when admin is viewing
-        if (this.isAdmin) {
+        if (this.isFullAdmin) {
           [this.beltExams, this.trainingCamps] = await Promise.all([
             this.supabase.getBeltExams(this.profile.id),
             this.supabase.getTrainingCamps(this.profile.id),
@@ -133,34 +154,88 @@ export class MembershipCardComponent implements OnInit {
     this.loading = false;
   }
 
-  async logout() {
-    await this.supabase.signOut();
-    this.router.navigate(['/']);
-  }
-
-  goBack() {
-    this.router.navigate(['/members']);
+  get headerRoute(): string {
+    return this.isViewingOther ? '/members' : '/';
   }
 
   async adjustSessions(delta: number) {
-    if (!this.membership || !this.isAdmin) return;
+    if (!this.membership || !this.canManageMembership) return;
+    if (this.membership.status === 'expired' && delta > 0) {
+      this.showMemberMsg('Lejárt bérlethez új bérletet kell létrehozni.', 'error');
+      return;
+    }
     const newRemaining = Math.max(0, this.membership.remaining_sessions + delta);
     const newTotal = delta > 0
       ? Math.max(this.membership.total_sessions, newRemaining)
       : this.membership.total_sessions;
+    const newStatus = newRemaining <= 0 ? 'expired' : this.membership.status;
     await this.supabase.updateMembership(this.membership.id, {
       remaining_sessions: newRemaining,
       total_sessions: newTotal,
+      status: newStatus,
     });
     this.membership.remaining_sessions = newRemaining;
     this.membership.total_sessions = newTotal;
+    this.membership.status = newStatus;
   }
 
   async toggleMembershipStatus() {
-    if (!this.membership || !this.isAdmin) return;
-    const newStatus = this.membership.status === 'active' ? 'expired' : 'active';
+    if (!this.membership || !this.canManageMembership) return;
+    if (this.membership.status === 'expired') {
+      this.showMemberMsg('Lejárt bérlet nem aktiválható újra. Helyette új bérletet kell létrehozni.', 'error');
+      return;
+    }
+    const newStatus = 'expired';
     await this.supabase.updateMembership(this.membership.id, { status: newStatus });
     this.membership.status = newStatus;
+    this.membershipHistory = await this.supabase.getMembershipHistory(this.profile!.id);
+  }
+
+  async addMembership() {
+    if (!this.profile || !this.canManageMembership) return;
+    if (this.profile.admin_role || this.profile.is_admin) {
+      this.showMemberMsg('Adminokhoz (edzőkhöz) nem lehet bérletet létrehozni.', 'error');
+      return;
+    }
+    if (this.membership) {
+      this.showMemberMsg('Amíg van aktív bérlet, nem hozható létre új. Előbb a mostaninak kell elfogynia vagy lezárulnia.', 'error');
+      return;
+    }
+    this.creatingMembership = true;
+    const { error } = await this.supabase.createMembership({
+      user_id: this.profile.id,
+      type: this.newMembership.type,
+      total_sessions: 10,
+      remaining_sessions: 10,
+      valid_until: this.newMembership.valid_until || null,
+      status: this.newMembership.status,
+    });
+    this.creatingMembership = false;
+    if (error) {
+      this.showMemberMsg((error as any).message ?? 'Hiba történt a bérlet létrehozásakor.', 'error');
+      return;
+    }
+    [this.membership, this.membershipHistory] = await Promise.all([
+      this.supabase.getMembership(this.profile.id),
+      this.supabase.getMembershipHistory(this.profile.id),
+    ]);
+    this.showNewMembershipForm = false;
+    this.showMemberMsg('Új bérlet létrehozva.', 'success');
+  }
+
+  get isViewedProfileAdmin(): boolean {
+    return !!(this.profile && (this.profile.admin_role || this.profile.is_admin));
+  }
+
+  get canAddMembership(): boolean {
+    if (this.isViewedProfileAdmin) return false;
+    return !this.membership;
+  }
+
+  private showMemberMsg(msg: string, type: 'success' | 'error') {
+    this.memberActionMsg = msg;
+    this.memberActionType = type;
+    setTimeout(() => (this.memberActionMsg = ''), 3000);
   }
 
   // ── Admin profile fields ─────────────────────────────────────────
@@ -237,6 +312,21 @@ export class MembershipCardComponent implements OnInit {
   get sessionsUsed(): number {
     const m = this.membership;
     return m ? m.total_sessions - m.remaining_sessions : 0;
+  }
+
+  typeLabel(type: string): string {
+    const map: Record<string, string> = {
+      kombinalt: 'Kombinált',
+      kempo_cross: 'Kempo, cross',
+      session_pass: 'Alkalombérlet',
+      monthly: 'Havi bérlet',
+      annual: 'Éves bérlet',
+    };
+    return map[type] ?? type;
+  }
+
+  membershipStatusLabel(membership: Membership): string {
+    return membership.status === 'active' ? 'Aktív bérlet' : 'Lejárt bérlet';
   }
 
 }

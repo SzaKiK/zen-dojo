@@ -1,17 +1,13 @@
 <div class="card-page">
   <header class="header">
-    @if (isViewingOther) {
-      <button class="back-btn" (click)="goBack()">
-        <span class="material-icons">arrow_back</span>
-      </button>
-    }
+    <a [routerLink]="headerRoute" class="back-btn" aria-label="Vissza">
+      <span class="material-icons">arrow_back</span>
+    </a>
     <div class="logo">
       <span class="material-icons">shield</span>
       <span class="brand">DHKSE</span>
     </div>
-    <button class="logout-btn" (click)="logout()">
-      <span class="material-icons">logout</span>
-    </button>
+    <span class="header-spacer"></span>
   </header>
 
   <section class="card-section">
@@ -21,7 +17,7 @@
         <p>Betöltés...</p>
       </div>
     } @else {
-    <h2>{{ isViewingOther ? 'Tag Profil' : 'Tagsági Kártya' }}</h2>
+    <h2>{{ isViewingOther ? 'Tanuló adatai' : 'Tag adatai' }}</h2>
 
     <div class="membership-card">
       <div class="card-header">
@@ -33,7 +29,7 @@
           </div>
         }
         <span class="status-badge" [class.active]="membership?.status === 'active'" [class.expired]="membership?.status !== 'active'">
-          {{ membership?.status === 'active' ? 'AKTÍV' : 'LEJÁRT' }}
+          {{ membership?.status === 'active' ? 'AKTÍV BÉRLET' : 'LEJÁRT BÉRLET' }}
         </span>
       </div>
 
@@ -79,17 +75,24 @@
       </div>
     </div>
 
-    <!-- Admin controls for membership -->
-    @if (isAdmin && membership) {
+    @if (memberActionMsg) {
+      <div class="action-msg {{ memberActionType }}">
+        <span class="material-icons">{{ memberActionType === 'success' ? 'check_circle' : 'error' }}</span>
+        {{ memberActionMsg }}
+      </div>
+    }
+
+    <!-- Bérletkezelés -->
+    @if (isFullAdmin && membership && !isViewedProfileAdmin) {
       <div class="admin-controls">
-        <h3>Bérlet kezelés</h3>
+        <h3>Bérlet kezelése</h3>
         <div class="sessions-control">
           <span class="control-label">Hátralévő alkalmak: <strong>{{ membership.remaining_sessions }}</strong></span>
           <div class="control-buttons">
             <button class="control-btn minus" (click)="adjustSessions(-1)" [disabled]="membership.remaining_sessions <= 0">
               <span class="material-icons">remove</span>
             </button>
-            <button class="control-btn plus" (click)="adjustSessions(1)">
+            <button class="control-btn plus" (click)="adjustSessions(1)" [disabled]="membership.status === 'expired'">
               <span class="material-icons">add</span>
             </button>
           </div>
@@ -98,14 +101,66 @@
           <span class="control-label">Státusz</span>
           <button class="toggle-status-btn" [class]="membership.status" (click)="toggleMembershipStatus()">
             <span class="material-icons">{{ membership.status === 'active' ? 'toggle_on' : 'toggle_off' }}</span>
-            {{ membership.status === 'active' ? 'Aktív' : 'Lejárt' }}
+            {{ membership.status === 'active' ? 'Bérlet lezárása' : 'Lejárt bérlet' }}
           </button>
         </div>
       </div>
     }
 
+    @if (canManageMembership && !isViewedProfileAdmin) {
+      <div class="admin-controls">
+        <h3>Új bérlet</h3>
+        @if (canAddMembership) {
+          <button class="btn-toggle-form" (click)="showNewMembershipForm = !showNewMembershipForm">
+            <span class="material-icons">{{ showNewMembershipForm ? 'close' : 'add' }}</span>
+            {{ showNewMembershipForm ? 'Mégsem' : 'Új bérlet hozzáadása' }}
+          </button>
+
+          @if (showNewMembershipForm) {
+            <div class="detail-field">
+              <label>Típus</label>
+              <select [(ngModel)]="newMembership.type" class="field-select">
+                <option value="kombinalt">Kombinált (10 alkalom)</option>
+                <option value="kempo_cross">Kempo, cross (10 alkalom)</option>
+              </select>
+            </div>
+            <div class="detail-field">
+              <label>Érvényes (nem kötelező)</label>
+              <input type="date" [(ngModel)]="newMembership.valid_until" class="field-input" />
+            </div>
+            <button class="btn-save-admin" (click)="addMembership()" [disabled]="creatingMembership">
+              <span class="material-icons">save</span>
+              {{ creatingMembership ? 'Mentés...' : 'Létrehozás' }}
+            </button>
+          }
+        } @else {
+          <p class="helper-text">A tagnak már van aktív bérlete. Új bérlet csak akkor hozható létre, ha a mostani már elfogyott vagy le lett zárva.</p>
+        }
+      </div>
+    }
+
+    @if (membershipHistory.length > 0) {
+      <div class="admin-controls">
+        <h3>Bérlet előzmények</h3>
+        <div class="history-list">
+          @for (historyItem of membershipHistory; track historyItem.id) {
+            <div class="history-item">
+              <div>
+                <strong>{{ typeLabel(historyItem.type) }}</strong>
+                <p>{{ historyItem.remaining_sessions }} / {{ historyItem.total_sessions }} alkalom</p>
+              </div>
+              <div class="history-meta">
+                <span class="history-status">{{ membershipStatusLabel(historyItem) }}</span>
+                <span>Érvényes: {{ historyItem.valid_until ? (historyItem.valid_until | date:'yyyy. MM. dd.') : 'Nincs megadva' }}</span>
+              </div>
+            </div>
+          }
+        </div>
+      </div>
+    }
+
     <!-- Admin-only member details -->
-    @if (isAdmin) {
+    @if (isFullAdmin) {
       <div class="admin-details-panel">
         <h3 class="panel-title">
           <span class="material-icons">admin_panel_settings</span>
@@ -251,7 +306,7 @@
     }
   </section>
 
-  @if (isAdmin) {
+  @if (isFullAdmin) {
     <nav class="bottom-nav">
       <a routerLink="/admin" class="nav-item">
         <span class="material-icons">dashboard</span>
@@ -270,6 +325,25 @@
         <span>Bérletek</span>
       </a>
     </nav>
+  } @else if (canManageMembership) {
+    <nav class="bottom-nav">
+      <a routerLink="/berletek" class="nav-item">
+        <span class="material-icons">card_membership</span>
+        <span>Bérletek</span>
+      </a>
+      <a routerLink="/qr-scanner" class="nav-item">
+        <span class="material-icons">qr_code_scanner</span>
+        <span>QR Scan</span>
+      </a>
+      <a routerLink="/members" class="nav-item">
+        <span class="material-icons">group</span>
+        <span>Tagok</span>
+      </a>
+      <a routerLink="/training" class="nav-item">
+        <span class="material-icons">fitness_center</span>
+        <span>Edzések</span>
+      </a>
+    </nav>
   } @else {
     <nav class="bottom-nav">
       <a routerLink="/membership-card" class="nav-item active">
@@ -283,10 +357,6 @@
       <a routerLink="/training" class="nav-item">
         <span class="material-icons">fitness_center</span>
         <span>Edzések</span>
-      </a>
-      <a routerLink="/membership-card" class="nav-item">
-        <span class="material-icons">person</span>
-        <span>Profil</span>
       </a>
     </nav>
   }

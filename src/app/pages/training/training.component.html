@@ -4,65 +4,30 @@
       <span class="material-icons">shield</span>
       <span class="brand">DHKSE</span>
     </div>
-    <button class="logout-btn" (click)="logout()">
-      <span class="material-icons">logout</span>
-    </button>
+    <a [routerLink]="headerRoute" class="back-btn" aria-label="Vissza">
+      <span class="material-icons">arrow_back</span>
+    </a>
   </header>
 
   <section class="page-title">
-    <h1>Edzésrend és Foglalás</h1>
-    <p class="subtitle">Válaszd ki a napot és foglald le az edzést</p>
+    <h1>Heti Edzésnaptár</h1>
+    <p class="subtitle">Tájékoztató nézet: heti fix edzések dátummal és helyszínnel</p>
   </section>
 
-  <!-- Member: My subscriptions toggle -->
-  @if (!isAdmin && upcomingBookings.length > 0) {
-    <div class="subscriptions-bar">
-      <button class="subscriptions-toggle" (click)="showSubscriptions = !showSubscriptions">
-        <span class="material-icons">event_available</span>
-        Foglalásaim ({{ upcomingBookings.length }})
-        <span class="material-icons">{{ showSubscriptions ? 'expand_less' : 'expand_more' }}</span>
-      </button>
-    </div>
-    @if (showSubscriptions) {
-      <section class="subscriptions-list">
-        @for (b of upcomingBookings; track b.booking_id) {
-          <div class="subscription-item">
-            <div class="sub-info">
-              <span class="material-icons">fitness_center</span>
-              <div>
-                <p class="sub-title">{{ b.session_title }}</p>
-                <p class="sub-date">{{ bookingDayLabel(b) }}</p>
-                <p class="sub-time">{{ b.start_time.substring(0,5) }} – {{ b.end_time.substring(0,5) }}</p>
-              </div>
-            </div>
-            <button class="cancel-booking-btn" (click)="cancelBookingById(b)">
-              <span class="material-icons">event_busy</span>
-              Lemondás
-            </button>
-          </div>
-        }
-      </section>
-    }
-  }
-
   <section class="day-selector">
-    @for (day of days; track day) {
+    @for (day of days; track day.id) {
       <button
-        [class.active]="selectedDay === day"
-        (click)="selectDay(day)"
+        [class.active]="selectedDay === day.id"
+        (click)="selectDay(day.id)"
         class="day-btn"
-      >{{ day }}</button>
+      >
+        <span class="day-name">{{ day.label }}</span>
+        <span class="day-date">{{ day.nextDateLabel }}</span>
+      </button>
     }
   </section>
 
   <section class="sessions-list">
-    @if (feedbackMsg) {
-      <div class="feedback" [class]="feedbackType">
-        <span class="material-icons">{{ feedbackType === 'success' ? 'check_circle' : 'error' }}</span>
-        {{ feedbackMsg }}
-      </div>
-    }
-
     @if (loading) {
       <div class="loading-state">
         <span class="material-icons spin">sync</span>
@@ -78,50 +43,27 @@
         <div class="session-card">
           <div class="session-time">
             <span class="material-icons">schedule</span>
-            {{ session.time }}
+            {{ session.dayName }} • {{ session.nextDateLabel }} • {{ session.time }}
           </div>
 
           <div class="session-details">
             <h3>{{ session.title }}</h3>
-            <p class="instructor">{{ session.instructor_name }}</p>
-            <p class="instructor">{{ session.dojo }}</p>
+            <p class="instructor">Edző: {{ session.instructor_name }}</p>
+            <p class="instructor">Helyszín: {{ session.dojo }}</p>
             <span class="level-badge" [class]="session.levelClass">{{ session.level }}</span>
           </div>
 
           <div class="session-footer">
-            <div class="spots">
-              <div class="spots-bar">
-                <div class="spots-fill" [style.width.%]="(session.current_bookings / session.capacity) * 100"></div>
-              </div>
-              <span class="spots-text">{{ session.capacity - session.current_bookings }} / {{ session.capacity }} hely szabad</span>
+            <div class="spots info-only">
+              <span class="spots-text">Hetente ismétlődő fix edzés</span>
             </div>
-            @if (isAdmin) {
-              <!-- Admin: read-only view, no booking -->
-            } @else if (session.booked) {
-              <button class="book-btn booked cancel" (click)="cancelSession(session)" [disabled]="session.cancelling">
-                @if (session.cancelling) {
-                  <span class="material-icons spin">sync</span>
-                } @else {
-                  <span class="material-icons">event_busy</span>
-                  Lemondás
-                }
-              </button>
-            } @else if (session.full) {
-              <button class="book-btn full" disabled>Betelt</button>
-            } @else if (session.booking) {
-              <button class="book-btn" disabled>
-                <span class="material-icons spin">sync</span>
-              </button>
-            } @else {
-              <button class="book-btn" (click)="bookSession(session)">Foglalás</button>
-            }
           </div>
         </div>
       }
     }
   </section>
 
-  @if (isAdmin) {
+  @if (isFullAdmin) {
     <nav class="bottom-nav">
       <a routerLink="/admin" class="nav-item">
         <span class="material-icons">dashboard</span>
@@ -140,6 +82,25 @@
         <span>Bérletek</span>
       </a>
     </nav>
+  } @else if (isAdmin) {
+    <nav class="bottom-nav">
+      <a routerLink="/berletek" class="nav-item">
+        <span class="material-icons">card_membership</span>
+        <span>Bérletek</span>
+      </a>
+      <a routerLink="/qr-scanner" class="nav-item">
+        <span class="material-icons">qr_code_scanner</span>
+        <span>QR Scan</span>
+      </a>
+      <a routerLink="/members" class="nav-item">
+        <span class="material-icons">group</span>
+        <span>Tagok</span>
+      </a>
+      <a routerLink="/training" class="nav-item active">
+        <span class="material-icons">fitness_center</span>
+        <span>Edzések</span>
+      </a>
+    </nav>
   } @else {
     <nav class="bottom-nav">
       <a routerLink="/membership-card" class="nav-item">
@@ -153,10 +114,6 @@
       <a routerLink="/training" class="nav-item active">
         <span class="material-icons">fitness_center</span>
         <span>Edzések</span>
-      </a>
-      <a routerLink="/membership-card" class="nav-item">
-        <span class="material-icons">person</span>
-        <span>Profil</span>
       </a>
     </nav>
   }

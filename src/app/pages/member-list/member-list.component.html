@@ -4,9 +4,9 @@
       <span class="material-icons">shield</span>
       <span class="brand">DHKSE</span>
     </div>
-    <button class="logout-btn" (click)="logout()">
-      <span class="material-icons">logout</span>
-    </button>
+    <a routerLink="/admin" class="back-btn" aria-label="Vissza a vezérlőpulthoz">
+      <span class="material-icons">arrow_back</span>
+    </a>
   </header>
 
   <section class="search-section">
@@ -57,8 +57,31 @@
             <span class="status-badge" [class]="member.status">
               {{ member.status === 'active' ? 'Aktív' : 'Lejárt' }}
             </span>
+            <span class="admin-role-badge" [class.full]="member.admin_role === 'full_admin'" [class.membership]="member.admin_role === 'membership_admin'">
+              {{ getAdminRoleLabel(member) }}
+            </span>
             <p class="belt">{{ member.belt_rank || '—' }}</p>
+
+            @if (isFullAdmin) {
+              <div class="admin-role-control" (click)="$event.stopPropagation()">
+                <label [for]="'role-' + member.id">Edzői szerep:</label>
+                <select
+                  [id]="'role-' + member.id"
+                  [value]="member.admin_role ?? ''"
+                  (change)="changeAdminRole(member, $any($event.target).value, $event)"
+                >
+                  <option value="">Tanuló</option>
+                  <option value="membership_admin">Edző (tagságkezelő)</option>
+                  <option value="full_admin">Vezető edző</option>
+                </select>
+              </div>
+            }
           </div>
+          @if (isFullAdmin) {
+            <button class="delete-member-btn" type="button" (click)="deleteMember(member, $event)" title="Tag törlése">
+              <span class="material-icons">delete</span>
+            </button>
+          }
           <span class="material-icons chevron">chevron_right</span>
         </div>
       }
@@ -69,22 +92,43 @@
     <span class="material-icons">person_add</span>
   </button>
 
-  <nav class="bottom-nav">
-    <a routerLink="/admin" class="nav-item">
-      <span class="material-icons">dashboard</span>
-      <span>Vezérlőpult</span>
-    </a>
-    <a routerLink="/qr-scanner" class="nav-item">
-      <span class="material-icons">qr_code_scanner</span>
-      <span>QR Scan</span>
-    </a>
-    <a routerLink="/members" class="nav-item active">
-      <span class="material-icons">group</span>
-      <span>Tagok</span>
-    </a>
-    <a routerLink="/berletek" class="nav-item">
-      <span class="material-icons">card_membership</span>
-      <span>Bérletek</span>
-    </a>
-  </nav>
+  @if (isFullAdmin) {
+    <nav class="bottom-nav">
+      <a routerLink="/admin" class="nav-item">
+        <span class="material-icons">dashboard</span>
+        <span>Vezérlőpult</span>
+      </a>
+      <a routerLink="/qr-scanner" class="nav-item">
+        <span class="material-icons">qr_code_scanner</span>
+        <span>QR Scan</span>
+      </a>
+      <a routerLink="/members" class="nav-item active">
+        <span class="material-icons">group</span>
+        <span>Tagok</span>
+      </a>
+      <a routerLink="/berletek" class="nav-item">
+        <span class="material-icons">card_membership</span>
+        <span>Bérletek</span>
+      </a>
+    </nav>
+  } @else {
+    <nav class="bottom-nav">
+      <a routerLink="/berletek" class="nav-item">
+        <span class="material-icons">card_membership</span>
+        <span>Bérletek</span>
+      </a>
+      <a routerLink="/qr-scanner" class="nav-item">
+        <span class="material-icons">qr_code_scanner</span>
+        <span>QR Scan</span>
+      </a>
+      <a routerLink="/members" class="nav-item active">
+        <span class="material-icons">group</span>
+        <span>Tagok</span>
+      </a>
+      <a routerLink="/training" class="nav-item">
+        <span class="material-icons">fitness_center</span>
+        <span>Edzések</span>
+      </a>
+    </nav>
+  }
 </div>
