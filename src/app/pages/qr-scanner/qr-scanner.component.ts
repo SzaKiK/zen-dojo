@@ -35,8 +35,10 @@ export class QrScannerComponent implements OnInit, OnDestroy {
 
   // Manual member selector
   allProfiles: Profile[] = [];
+  memberSelectMode: 'search' | 'lov' = 'search';
   memberSearchTerm = '';
   filteredMembers: Profile[] = [];
+  selectedLovMemberId = '';
   loadingManualMember = false;
 
   // Scanned member
@@ -112,6 +114,11 @@ export class QrScannerComponent implements OnInit, OnDestroy {
     this.filteredMembers = this.allProfiles.filter(p =>
       p.full_name.toLowerCase().includes(term)
     ).slice(0, 10);
+  }
+
+  async selectLovMember() {
+    const profile = this.allProfiles.find(p => p.id === this.selectedLovMemberId);
+    if (profile) await this.selectManualMember(profile);
   }
 
   async selectManualMember(profile: Profile) {
@@ -356,11 +363,33 @@ export class QrScannerComponent implements OnInit, OnDestroy {
   async markAppeared() {
     if (!this.selectedSession || !this.scannedProfile) return;
     this.markingAppeared = true;
+    // First attempt (no force)
     const result = await this.supabase.logEventAttendance(this.adminId, this.scannedProfile.id, this.selectedSession.id);
     this.markingAppeared = false;
+
     if (!result.error) {
       this.scannedMembership = await this.supabase.getMembership(this.scannedProfile.id);
       this.showMemberMsg('Megjelenés rögzítve!', 'success');
+      return;
+    }
+
+    // If the error is a duplicate, ask for confirmation and retry with force
+    const isDuplicate = /megjel.{0,4}lt erre az/i.test(result.error.message ?? '');
+    if (isDuplicate) {
+      const confirmed = confirm(
+        `${this.scannedProfile.full_name} erre az edzésre már be van jelölve ma.\n` +
+        `Biztosan rögzítesz egy második megjelenést?`
+      );
+      if (!confirmed) return;
+      this.markingAppeared = true;
+      const forced = await this.supabase.logEventAttendance(this.adminId, this.scannedProfile.id, this.selectedSession.id, true);
+      this.markingAppeared = false;
+      if (!forced.error) {
+        this.scannedMembership = await this.supabase.getMembership(this.scannedProfile.id);
+        this.showMemberMsg('Második megjelenés rögzítve!', 'success');
+      } else {
+        this.showMemberMsg(forced.error.message ?? 'Hiba.', 'error');
+      }
     } else {
       this.showMemberMsg(result.error.message ?? 'Hiba.', 'error');
     }

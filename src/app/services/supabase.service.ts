@@ -261,13 +261,15 @@ export class SupabaseService {
     return this.supabase!.from('training_sessions').delete().eq('id', id);
   }
 
-  async logEventAttendance(adminId: string, userId: string, sessionId: string) {
+  async logEventAttendance(adminId: string, userId: string, sessionId: string, force = false) {
     if (this.isMockMode) return { error: null };
-    const { data, error } = await this.supabase!.rpc('log_event_attendance', {
+    const params: Record<string, unknown> = {
       p_admin_id: adminId,
       p_user_id: userId,
       p_session_id: sessionId,
-    });
+    };
+    if (force) params['p_force'] = true;
+    const { data, error } = await this.supabase!.rpc('log_event_attendance', params);
     if (error) return { error: { message: error.message } };
     if (data?.error) return { error: { message: data.error } };
     return {

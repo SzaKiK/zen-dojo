@@ -43,13 +43,61 @@
       <h3>Új bérlet létrehozása</h3>
 
       <div class="form-group">
-        <label>Tag</label>
-        <select [(ngModel)]="newBerlet.user_id">
-          <option value="">Válassz tagot...</option>
-          @for (p of nonAdminProfiles; track p.id) {
-            <option [value]="p.id">{{ p.full_name }}</option>
+        <div class="form-label-row">
+          <label>Tag</label>
+          <div class="mode-toggle">
+            <button class="mode-btn" [class.active]="memberSelectMode === 'lov'"
+              (click)="memberSelectMode = 'lov'; memberSearchTerm = ''; filteredMembers = []" title="Lista">
+              <span class="material-icons">list</span>
+            </button>
+            <button class="mode-btn" [class.active]="memberSelectMode === 'search'"
+              (click)="memberSelectMode = 'search'; newBerlet.user_id = ''" title="Keresés">
+              <span class="material-icons">search</span>
+            </button>
+          </div>
+        </div>
+
+        @if (memberSelectMode === 'lov') {
+          <select [(ngModel)]="newBerlet.user_id">
+            <option value="">Válassz tagot...</option>
+            @for (p of nonAdminProfiles; track p.id) {
+              <option [value]="p.id">{{ p.full_name }}</option>
+            }
+          </select>
+        }
+
+        @if (memberSelectMode === 'search') {
+          <div class="member-search-row">
+            <span class="material-icons search-icon">search</span>
+            <input
+              type="text"
+              [(ngModel)]="memberSearchTerm"
+              (input)="onMemberSearchChange()"
+              placeholder="Tag keresése név alapján..."
+              class="member-search-input"
+            />
+            @if (memberSearchTerm) {
+              <button class="clear-search" (click)="memberSearchTerm = ''; filteredMembers = []; newBerlet.user_id = ''">
+                <span class="material-icons">close</span>
+              </button>
+            }
+          </div>
+          @if (filteredMembers.length > 0) {
+            <div class="member-results">
+              @for (p of filteredMembers; track p.id) {
+                <button class="member-result-item"
+                  [class.selected]="newBerlet.user_id === p.id"
+                  (click)="selectSearchMember(p)">
+                  <span class="result-name">{{ p.full_name }}</span>
+                  <span class="result-belt">{{ p.belt_rank || '—' }}</span>
+                </button>
+              }
+            </div>
           }
-        </select>
+          @if (memberSearchTerm && filteredMembers.length === 0 && !newBerlet.user_id) {
+            <p class="no-results">Nincs találat.</p>
+          }
+        }
       </div>
 
       @if (selectedUserHasActiveMembership()) {

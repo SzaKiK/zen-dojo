@@ -27,6 +27,11 @@ export class BerletetComponent implements OnInit {
   isFullAdmin = false;
   currentUserId = '';
 
+  // Member selector
+  memberSelectMode: 'lov' | 'search' = 'lov';
+  memberSearchTerm = '';
+  filteredMembers: Profile[] = [];
+
   // New membership form
   newBerlet = {
     user_id: '',
@@ -52,6 +57,20 @@ export class BerletetComponent implements OnInit {
 
   get nonAdminProfiles(): Profile[] {
     return this.profiles.filter(p => !p.admin_role && !p.is_admin);
+  }
+
+  onMemberSearchChange() {
+    const term = this.memberSearchTerm.trim().toLowerCase();
+    if (!term) { this.filteredMembers = []; return; }
+    this.filteredMembers = this.nonAdminProfiles.filter(p =>
+      p.full_name.toLowerCase().includes(term)
+    ).slice(0, 10);
+  }
+
+  selectSearchMember(p: Profile) {
+    this.newBerlet.user_id = p.id;
+    this.memberSearchTerm = p.full_name;
+    this.filteredMembers = [];
   }
 
   async loadData() {

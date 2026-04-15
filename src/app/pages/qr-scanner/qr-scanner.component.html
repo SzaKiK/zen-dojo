@@ -63,47 +63,90 @@
 
     <!-- Manual member selector -->
     <div class="manual-select-panel">
-      <h3 class="panel-label">
-        <span class="material-icons">person_search</span>
-        Vagy válasszon tagot manuálisan
-      </h3>
-      <div class="member-search-row">
-        <span class="material-icons search-icon">search</span>
-        <input
-          type="text"
-          [(ngModel)]="memberSearchTerm"
-          (input)="onMemberSearchChange()"
-          placeholder="Tag keresése név alapján..."
-          class="member-search-input"
-        />
-        @if (memberSearchTerm) {
-          <button class="clear-search" (click)="memberSearchTerm = ''; filteredMembers = []">
-            <span class="material-icons">close</span>
+      <div class="panel-label-row">
+        <h3 class="panel-label">
+          <span class="material-icons">person_search</span>
+          Vagy válasszon tagot manuálisan
+        </h3>
+        <div class="mode-toggle">
+          <button
+            class="mode-btn"
+            [class.active]="memberSelectMode === 'search'"
+            (click)="memberSelectMode = 'search'; selectedLovMemberId = ''"
+            title="Keresés">
+            <span class="material-icons">search</span>
           </button>
-        }
+          <button
+            class="mode-btn"
+            [class.active]="memberSelectMode === 'lov'"
+            (click)="memberSelectMode = 'lov'; memberSearchTerm = ''; filteredMembers = []"
+            title="Lista">
+            <span class="material-icons">list</span>
+          </button>
+        </div>
       </div>
-      @if (filteredMembers.length > 0) {
-        <div class="member-results">
-          @for (p of filteredMembers; track p.id) {
-            <button class="member-result-item" (click)="selectManualMember(p)" [disabled]="loadingManualMember">
-              <div class="result-avatar">
-                @if (p.avatar_url) {
-                  <img [src]="p.avatar_url" [alt]="p.full_name" />
-                } @else {
-                  <span class="material-icons">person</span>
-                }
-              </div>
-              <div class="result-info">
-                <span class="result-name">{{ p.full_name }}</span>
-                <span class="result-belt">{{ p.belt_rank || '—' }}</span>
-              </div>
+
+      @if (memberSelectMode === 'search') {
+        <div class="member-search-row">
+          <span class="material-icons search-icon">search</span>
+          <input
+            type="text"
+            [(ngModel)]="memberSearchTerm"
+            (input)="onMemberSearchChange()"
+            placeholder="Tag keresése név alapján..."
+            class="member-search-input"
+          />
+          @if (memberSearchTerm) {
+            <button class="clear-search" (click)="memberSearchTerm = ''; filteredMembers = []">
+              <span class="material-icons">close</span>
             </button>
           }
         </div>
+        @if (filteredMembers.length > 0) {
+          <div class="member-results">
+            @for (p of filteredMembers; track p.id) {
+              <button class="member-result-item" (click)="selectManualMember(p)" [disabled]="loadingManualMember">
+                <div class="result-avatar">
+                  @if (p.avatar_url) {
+                    <img [src]="p.avatar_url" [alt]="p.full_name" />
+                  } @else {
+                    <span class="material-icons">person</span>
+                  }
+                </div>
+                <div class="result-info">
+                  <span class="result-name">{{ p.full_name }}</span>
+                  <span class="result-belt">{{ p.belt_rank || '—' }}</span>
+                </div>
+              </button>
+            }
+          </div>
+        }
+        @if (memberSearchTerm && filteredMembers.length === 0) {
+          <p class="no-results">Nincs találat.</p>
+        }
       }
-      @if (memberSearchTerm && filteredMembers.length === 0) {
-        <p class="no-results">Nincs találat.</p>
+
+      @if (memberSelectMode === 'lov') {
+        <div class="lov-row">
+          <select class="lov-select" [(ngModel)]="selectedLovMemberId">
+            <option value="">— Válasszon tagot —</option>
+            @for (p of allProfiles; track p.id) {
+              <option [value]="p.id">{{ p.full_name }}{{ p.belt_rank ? ' · ' + p.belt_rank : '' }}</option>
+            }
+          </select>
+          <button
+            class="btn-lov-go"
+            [disabled]="!selectedLovMemberId || loadingManualMember"
+            (click)="selectLovMember()">
+            @if (loadingManualMember) {
+              <span class="material-icons spin small">sync</span>
+            } @else {
+              <span class="material-icons">arrow_forward</span>
+            }
+          </button>
+        </div>
       }
+
       @if (loadingManualMember) {
         <div class="loading-member">
           <span class="material-icons spin small">sync</span>
@@ -202,7 +245,7 @@
             } @else {
               <span class="material-icons">how_to_reg</span>
             }
-            Megjelenés rögzítése
+           Rögzítés
           </button>
         }
 
