@@ -1,7 +1,8 @@
-import { Component } from '@angular/core';
+import { Component, OnInit } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { Router, RouterLink } from '@angular/router';
 import { SupabaseService } from '../../services/supabase.service';
+import { firstValueFrom, filter, timeout, catchError, of } from 'rxjs';
 
 @Component({
   selector: 'app-login',
@@ -10,7 +11,7 @@ import { SupabaseService } from '../../services/supabase.service';
   templateUrl: './login.component.html',
   styleUrl: './login.component.scss',
 })
-export class LoginComponent {
+export class LoginComponent implements OnInit {
   email = '';
   password = '';
   error = '';
@@ -21,29 +22,51 @@ export class LoginComponent {
     private router: Router
   ) {}
 
+  async ngOnInit() {
+    // If already logged in, redirect to appropriate page
+    try {
+      const { data } = await this.supabase.getSession();
+      if (data?.session) {
+        await this.redirectAfterLogin();
+      }
+    } catch {
+      // Session check failed — just show the login form
+    }
+  }
+
   async onSubmit() {
     this.loading = true;
     this.error = '';
-    const { error, data } = await this.supabase.signIn(this.email, this.password);
-    if (error) {
-      this.loading = false;
-      this.error = error.message;
-      return;
-    }
-    // Check admin role and redirect accordingly
-    const userId = data?.session?.user?.id;
-    if (userId) {
-      const profile = await this.supabase.getProfile(userId);
-      if (this.supabase.isFullAdmin(profile)) {
-        this.router.navigate(['/admin']);
-      } else if (this.supabase.isMembershipAdmin(profile)) {
-        this.router.navigate(['/berletek']);
-      } else {
-        this.router.navigate(['/membership-card']);
+    try {
+      const { error } = await this.supabase.signIn(this.email, this.password);
+      if (error) {
+        this.error = error.message;
+        return;
       }
-    } else {
-      this.router.navigate(['/membership-card']);
+      await this.redirectAfterLogin();
+    } catch (e: any) {
+      this.error = e?.message || 'Hiba történt a bejelentkezés során. Próbáld újra.';
+    } finally {
+      this.loading = false;
     }
-    this.loading = false;
+  }
+
+  private async redirectAfterLogin() {
+    // Wait for the reactive profile from onAuthStateChange (max 3s), then redirect by role.
+    // This avoids a separate getProfile call that could hang or fail.
+    const profile = await firstValueFrom(
+      this.supabase.currentProfile$.pipe(
+        filter(p => p !== null),
+        timeout(3000),
+        catchError(() => of(null))
+      )
+    );
+    if (this.supabase.isFullAdmin(profile)) {
+      await this.router.navigateByUrl('/admin');
+    } else if (this.supabase.isMembershipAdmin(profile)) {
+      await this.router.navigateByUrl('/berletek');
+    } else {
+      await this.router.navigateByUrl('/membership-card');
+    }
   }
 }

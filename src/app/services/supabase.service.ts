@@ -1,5 +1,6 @@
-import { Injectable } from '@angular/core';
+import { Injectable, NgZone } from '@angular/core';
 import { createClient, SupabaseClient } from '@supabase/supabase-js';
+import { BehaviorSubject } from 'rxjs';
 import { environment } from '../../environments/environment';
 
 // Kyu: 9.kyu (beginner) → 1.kyu; Dan: 1.dan → 10.dan
@@ -68,6 +69,12 @@ export interface TrainingSession {
 export class SupabaseService {
   private supabase: SupabaseClient | null = null;
 
+  // Reactive auth state
+  private _currentUser$ = new BehaviorSubject<any>(null);
+  private _currentProfile$ = new BehaviorSubject<Profile | null>(null);
+  readonly currentUser$ = this._currentUser$.asObservable();
+  readonly currentProfile$ = this._currentProfile$.asObservable();
+
   private getAuthRedirectUrl(path = '/'): string {
     const fallbackBase = environment.appUrl || 'https://dhkse.netlify.app';
     if (typeof window === 'undefined') {
@@ -84,7 +91,7 @@ export class SupabaseService {
     return !environment.supabaseUrl || environment.supabaseUrl === 'YOUR_SUPABASE_URL';
   }
 
-  constructor() {
+  constructor(private zone: NgZone) {
     if (!this.isMockMode) {
       this.supabase = createClient(
         environment.supabaseUrl,
@@ -98,6 +105,19 @@ export class SupabaseService {
           },
         }
       );
+
+      // Restore session and listen for auth changes
+      this.supabase.auth.onAuthStateChange(async (_event, session) => {
+        this.zone.run(async () => {
+          this._currentUser$.next(session?.user ?? null);
+          if (session?.user) {
+            const profile = await this.getProfile(session.user.id);
+            this._currentProfile$.next(profile);
+          } else {
+            this._currentProfile$.next(null);
+          }
+        });
+      });
     }
   }
 
@@ -130,8 +150,10 @@ export class SupabaseService {
     });
   }
 
-  signOut() {
-    if (this.isMockMode) return Promise.resolve({ error: null });
+  async signOut() {
+    if (this.isMockMode) return { error: null };
+    this._currentUser$.next(null);
+    this._currentProfile$.next(null);
     return this.supabase!.auth.signOut();
   }
 
@@ -222,6 +244,21 @@ export class SupabaseService {
       .order('day_of_week')
       .order('start_time');
     return data ?? [];
+  }
+
+  async createTrainingSession(session: Omit<TrainingSession, 'id' | 'created_at' | 'current_bookings'>) {
+    if (this.isMockMode) return { data: null, error: null };
+    return this.supabase!.from('training_sessions').insert(session).select().single();
+  }
+
+  async updateTrainingSession(id: string, updates: Partial<Omit<TrainingSession, 'id' | 'created_at' | 'current_bookings'>>) {
+    if (this.isMockMode) return { error: null };
+    return this.supabase!.from('training_sessions').update(updates).eq('id', id);
+  }
+
+  async deleteTrainingSession(id: string) {
+    if (this.isMockMode) return { error: null };
+    return this.supabase!.from('training_sessions').delete().eq('id', id);
   }
 
   async logEventAttendance(adminId: string, userId: string, sessionId: string) {
@@ -337,13 +374,41 @@ export class SupabaseService {
     return data ?? [];
   }
 
-  async getAdminActionLogs(limit = 100) {
+  async getAdminActionLogs(limit?: number) {
+    if (this.isMockMode) return [];
+    let query = this.supabase!
+      .from('admin_action_logs')
+      .select('*, profiles!admin_action_logs_admin_id_fkey(full_name), target_profile:profiles!admin_action_logs_target_user_id_fkey(full_name)')
+      .order('created_at', { ascending: false });
+    if (limit) query = query.limit(limit);
+    const { data } = await query;
+    return data ?? [];
+  }
+
+  async getAllMembersForExport() {
+    if (this.isMockMode) return [];
+    const { data } = await this.supabase!
+      .from('profiles')
+      .select('id, full_name, belt_rank, belt_level, phone, birth_date, medical_validity, membership_fee_paid, admin_role, created_at')
+      .order('full_name');
+    return data ?? [];
+  }
+
+  async getAllMembershipsForExport() {
+    if (this.isMockMode) return [];
+    const { data } = await this.supabase!
+      .from('memberships')
+      .select('id, type, status, total_sessions, remaining_sessions, valid_until, created_at, updated_at, profiles!memberships_user_id_fkey(full_name)')
+      .order('created_at', { ascending: false });
+    return data ?? [];
+  }
+
+  async getAllAuditLogsForExport() {
     if (this.isMockMode) return [];
     const { data } = await this.supabase!
       .from('admin_action_logs')
-      .select('*, profiles!admin_action_logs_admin_id_fkey(full_name), target_profile:profiles!admin_action_logs_target_user_id_fkey(full_name)')
-      .order('created_at', { ascending: false })
-      .limit(limit);
+      .select('id, action_type, membership_type, details, created_at, profiles!admin_action_logs_admin_id_fkey(full_name), target_profile:profiles!admin_action_logs_target_user_id_fkey(full_name)')
+      .order('created_at', { ascending: false });
     return data ?? [];
   }
 

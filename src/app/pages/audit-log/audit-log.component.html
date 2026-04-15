@@ -11,7 +11,7 @@
 
   <section class="page-title">
     <h1>Műveleti napló</h1>
-    <p class="subtitle">Bérlet statisztikák és események</p>
+    <p class="subtitle">Statisztikák, naplóbejegyzések és exportálás</p>
   </section>
 
   @if (loading) {
@@ -21,7 +21,7 @@
     </div>
   } @else {
 
-    <!-- Tab switcher -->
+    <!-- ── Tabs ─────────────────────────────────────────────────────── -->
     <div class="tabs">
       <button class="tab" [class.active]="activeTab === 'stats'" (click)="activeTab = 'stats'">
         <span class="material-icons">bar_chart</span>
@@ -31,26 +31,71 @@
         <span class="material-icons">list_alt</span>
         Események
       </button>
+      <button class="tab" [class.active]="activeTab === 'export'" (click)="activeTab = 'export'">
+        <span class="material-icons">download</span>
+        Export
+      </button>
     </div>
 
-    <!-- Stats tab -->
+    <!-- ══════════════════════════════════════════════════════════════ -->
+    <!-- STATS TAB                                                       -->
+    <!-- ══════════════════════════════════════════════════════════════ -->
     @if (activeTab === 'stats') {
-      <!-- Current month highlight -->
-      <div class="stat-hero">
-        <div class="hero-icon">
+
+      <!-- KPI row -->
+      <div class="kpi-row">
+        <div class="kpi-card accent-blue">
           <span class="material-icons">card_membership</span>
+          <div>
+            <span class="kpi-num">{{ currentMonthCreated }}</span>
+            <span class="kpi-label">bérlet ez hónapban</span>
+          </div>
         </div>
-        <div class="hero-data">
-          <span class="hero-number">{{ currentMonthCreated }}</span>
-          <span class="hero-label">bérlet létrehozva ebben a hónapban</span>
+        <div class="kpi-card accent-green">
+          <span class="material-icons">add_circle</span>
+          <div>
+            <span class="kpi-num">{{ totalCreated }}</span>
+            <span class="kpi-label">összes létrehozás</span>
+          </div>
+        </div>
+        <div class="kpi-card accent-orange">
+          <span class="material-icons">how_to_reg</span>
+          <div>
+            <span class="kpi-num">{{ totalAttendance }}</span>
+            <span class="kpi-label">jelenlét rögzítés</span>
+          </div>
+        </div>
+        <div class="kpi-card accent-red">
+          <span class="material-icons">delete_outline</span>
+          <div>
+            <span class="kpi-num">{{ totalDeleted }}</span>
+            <span class="kpi-label">bérlet törölve</span>
+          </div>
+        </div>
+        <div class="kpi-card accent-purple">
+          <span class="material-icons">edit_note</span>
+          <div>
+            <span class="kpi-num">{{ totalUpdated }}</span>
+            <span class="kpi-label">módosítás</span>
+          </div>
+        </div>
+        <div class="kpi-card accent-violet">
+          <span class="material-icons">admin_panel_settings</span>
+          <div>
+            <span class="kpi-num">{{ totalRoleChanged }}</span>
+            <span class="kpi-label">jogosultság változás</span>
+          </div>
         </div>
       </div>
 
-      <!-- Monthly bars -->
-      <div class="monthly-section">
-        <h2>Havi bérlet létrehozások</h2>
+      <!-- Monthly bérletek bar chart (12 months) -->
+      <div class="card section-card">
+        <h2 class="section-title">
+          <span class="material-icons">show_chart</span>
+          Havi bérlet létrehozások (utolsó 12 hónap)
+        </h2>
         <div class="monthly-bars">
-          @for (month of monthlyBerletStats; track month.label) {
+          @for (month of monthlyBerletStats; track month.key) {
             <div class="bar-row">
               <span class="bar-label">{{ month.label }}</span>
               <div class="bar-track">
@@ -60,79 +105,184 @@
                   }
                 </div>
               </div>
+              @if (month.count === 0) {
+                <span class="bar-zero">–</span>
+              }
             </div>
           }
         </div>
       </div>
 
-      <!-- Admin breakdown -->
-      <div class="monthly-section">
-        <h2>Ki hozta létre a bérleteket?</h2>
+      <!-- Two-column: action type breakdown + membership type -->
+      <div class="two-col-grid">
+        <div class="card section-card">
+          <h2 class="section-title">
+            <span class="material-icons">donut_small</span>
+            Műveletek megoszlása
+          </h2>
+          <div class="type-list">
+            @for (t of actionTypeStats; track t.type) {
+              <div class="type-row">
+                <div class="type-icon" [style.background]="typeColor(t.type)">
+                  <span class="material-icons">{{ actionIcon(t.type) }}</span>
+                </div>
+                <div class="type-info">
+                  <span class="type-label">{{ t.label }}</span>
+                  <div class="type-bar-track">
+                    <div class="type-bar-fill" [style.width.%]="t.pct" [style.background]="typeColor(t.type)"></div>
+                  </div>
+                </div>
+                <div class="type-stats">
+                  <span class="type-count">{{ t.count }}</span>
+                  <span class="type-pct">{{ t.pct }}%</span>
+                </div>
+              </div>
+            }
+          </div>
+        </div>
+
+        <div class="card section-card">
+          <h2 class="section-title">
+            <span class="material-icons">category</span>
+            Bérlet típusok megoszlása
+          </h2>
+          @if (membershipTypeStats.length === 0) {
+            <p class="no-data">Nincs adat.</p>
+          } @else {
+            <div class="type-list">
+              @for (t of membershipTypeStats; track t.type) {
+                <div class="type-row">
+                  <div class="type-icon" style="background: #4a6cf7">
+                    <span class="material-icons">card_membership</span>
+                  </div>
+                  <div class="type-info">
+                    <span class="type-label">{{ t.label }}</span>
+                    <div class="type-bar-track">
+                      <div class="type-bar-fill" [style.width.%]="t.pct" style="background:#4a6cf7"></div>
+                    </div>
+                  </div>
+                  <div class="type-stats">
+                    <span class="type-count">{{ t.count }}</span>
+                    <span class="type-pct">{{ t.pct }}%</span>
+                  </div>
+                </div>
+              }
+            </div>
+          }
+        </div>
+      </div>
+
+      <!-- Admin breakdown bars -->
+      <div class="card section-card">
+        <h2 class="section-title">
+          <span class="material-icons">leaderboard</span>
+          Adminok bérlet-létrehozásai (összesen)
+        </h2>
         @if (adminBerletStats.length === 0) {
           <p class="no-data">Nincs adat.</p>
         } @else {
           <div class="admin-list">
             @for (admin of adminBerletStats; track admin.name) {
               <div class="admin-row">
-                <div class="admin-avatar">
-                  <span class="material-icons">person</span>
-                </div>
+                <div class="admin-avatar"><span class="material-icons">person</span></div>
                 <div class="admin-info">
                   <span class="admin-name">{{ admin.name }}</span>
-                  <span class="admin-count">{{ admin.count }} bérlet</span>
+                  <div class="admin-bar-track">
+                    <div class="admin-bar-fill" [style.width.%]="admin.pct"></div>
+                  </div>
                 </div>
-                <div class="admin-bar-track">
-                  <div class="admin-bar-fill" [style.width.%]="admin.pct"></div>
-                </div>
+                <span class="admin-count">{{ admin.count }}</span>
               </div>
             }
           </div>
         }
       </div>
 
-      <!-- Summary cards -->
-      <div class="summary-cards">
-        <div class="summary-card">
-          <span class="material-icons">add_circle</span>
-          <div>
-            <span class="card-num">{{ totalCreated }}</span>
-            <span class="card-label">összes létrehozás</span>
+      <!-- Pivot table: Admin × Month -->
+      <div class="card section-card pivot-section">
+        <h2 class="section-title">
+          <span class="material-icons">table_chart</span>
+          Admin × hónap pivot (bérlet létrehozás)
+        </h2>
+        @if (pivotRows.length === 0) {
+          <p class="no-data">Nincs elegendő adat a pivot táblához.</p>
+        } @else {
+          <div class="pivot-scroll">
+            <table class="pivot-table">
+              <thead>
+                <tr>
+                  <th class="pivot-admin-col">Admin</th>
+                  @for (lbl of pivotMonthLabels; track lbl) {
+                    <th>{{ lbl }}</th>
+                  }
+                  <th class="pivot-total-col">Összes</th>
+                </tr>
+              </thead>
+              <tbody>
+                @for (row of pivotRows; track row.adminName) {
+                  <tr>
+                    <td class="pivot-admin-col">{{ row.adminName }}</td>
+                    @for (val of row.months; track $index) {
+                      <td class="pivot-val" [class.pivot-val-zero]="val === 0">
+                        {{ val || '–' }}
+                      </td>
+                    }
+                    <td class="pivot-total">{{ row.total }}</td>
+                  </tr>
+                }
+              </tbody>
+            </table>
           </div>
-        </div>
-        <div class="summary-card">
-          <span class="material-icons">edit_note</span>
-          <div>
-            <span class="card-num">{{ totalUpdated }}</span>
-            <span class="card-label">módosítás</span>
-          </div>
-        </div>
-        <div class="summary-card">
-          <span class="material-icons">delete_outline</span>
-          <div>
-            <span class="card-num">{{ totalDeleted }}</span>
-            <span class="card-label">törlés</span>
-          </div>
-        </div>
-        <div class="summary-card">
-          <span class="material-icons">how_to_reg</span>
-          <div>
-            <span class="card-num">{{ totalAttendance }}</span>
-            <span class="card-label">jelenlét rögzítés</span>
-          </div>
-        </div>
+        }
       </div>
     }
 
-    <!-- Logs tab -->
+    <!-- ══════════════════════════════════════════════════════════════ -->
+    <!-- LOGS TAB                                                        -->
+    <!-- ══════════════════════════════════════════════════════════════ -->
     @if (activeTab === 'logs') {
-      @if (logs.length === 0) {
+
+      <!-- Filter bar -->
+      <div class="card filter-card">
+        <div class="filter-row">
+          <div class="filter-group">
+            <label>Típus</label>
+            <select [(ngModel)]="logFilter" (change)="resetLogPage()">
+              <option value="all">Összes</option>
+              <option value="membership_created">Bérlet létrehozva</option>
+              <option value="membership_updated">Bérlet módosítva</option>
+              <option value="membership_deleted">Bérlet törölve</option>
+              <option value="attendance_recorded">Jelenlét rögzítve</option>
+              <option value="role_changed">Jogosultság változás</option>
+            </select>
+          </div>
+          <div class="filter-group">
+            <label>Dátumtól</label>
+            <input type="date" [(ngModel)]="logDateFrom" (change)="resetLogPage()" />
+          </div>
+          <div class="filter-group">
+            <label>Dátumig</label>
+            <input type="date" [(ngModel)]="logDateTo" (change)="resetLogPage()" />
+          </div>
+        </div>
+        <div class="filter-summary">
+          {{ filteredLogs.length }} bejegyzés találva
+          @if (logFilter !== 'all' || logDateFrom || logDateTo) {
+            <button class="clear-filter" (click)="logFilter = 'all'; logDateFrom = ''; logDateTo = ''; resetLogPage()">
+              <span class="material-icons">close</span> Szűrők törlése
+            </button>
+          }
+        </div>
+      </div>
+
+      @if (filteredLogs.length === 0) {
         <div class="empty-state">
           <span class="material-icons">inbox</span>
-          <p>Nincs naplóbejegyzés.</p>
+          <p>Nincs találat.</p>
         </div>
       } @else {
         <div class="log-list">
-          @for (log of logs; track log.id) {
+          @for (log of pagedLogs; track log.id) {
             <div class="log-item">
               <div class="log-icon" [ngClass]="actionClass(log.action_type)">
                 <span class="material-icons">{{ actionIcon(log.action_type) }}</span>
@@ -140,12 +290,12 @@
               <div class="log-body">
                 <p class="log-action">{{ actionLabel(log.action_type) }}</p>
                 <p class="log-detail">
-                  {{ log.profiles?.full_name || 'Admin' }}
+                  <strong>{{ log.profiles?.full_name || 'Admin' }}</strong>
                   @if (log.target_profile?.full_name) {
-                    → {{ log.target_profile?.full_name }}
+                    <span class="arrow">→</span>{{ log.target_profile?.full_name }}
                   }
                   @if (log.membership_type) {
-                    · {{ membershipTypeLabel(log.membership_type) }}
+                    <span class="dot">·</span>{{ membershipTypeLabel(log.membership_type) }}
                   }
                 </p>
                 <p class="log-time">{{ fmtDate(log.created_at) }}</p>
@@ -153,7 +303,128 @@
             </div>
           }
         </div>
+
+        <!-- Pagination -->
+        @if (totalLogPages > 1) {
+          <div class="pagination">
+            <button (click)="logPage = logPage - 1" [disabled]="logPage === 0">
+              <span class="material-icons">chevron_left</span>
+            </button>
+            <span>{{ logPage + 1 }} / {{ totalLogPages }}</span>
+            <button (click)="logPage = logPage + 1" [disabled]="logPage >= totalLogPages - 1">
+              <span class="material-icons">chevron_right</span>
+            </button>
+          </div>
+        }
       }
+    }
+
+    <!-- ══════════════════════════════════════════════════════════════ -->
+    <!-- EXPORT TAB                                                      -->
+    <!-- ══════════════════════════════════════════════════════════════ -->
+    @if (activeTab === 'export') {
+
+      @if (exportError) {
+        <div class="export-error">
+          <span class="material-icons">error_outline</span>
+          {{ exportError }}
+        </div>
+      }
+
+      <!-- Full export -->
+      <div class="card export-card export-hero">
+        <div class="export-card-icon hero-icon">
+          <span class="material-icons">library_books</span>
+        </div>
+        <div class="export-card-body">
+          <h3>Teljes adatexport</h3>
+          <p>Egyetlen Excel fájl, 4 munkafüzettel: Tagok · Bérletek · Műveleti napló · Admin pivot</p>
+        </div>
+        <button class="export-btn primary" (click)="exportAll()" [disabled]="exporting !== null">
+          @if (exporting === 'summary') {
+            <span class="material-icons spin">sync</span>
+          } @else {
+            <span class="material-icons">download</span>
+          }
+          Exportálás
+        </button>
+      </div>
+
+      <div class="export-divider">Vagy exportálj egyenként</div>
+
+      <div class="export-grid">
+        <div class="card export-card">
+          <div class="export-card-icon" style="background:rgba(74,108,247,.15); color:#4a6cf7">
+            <span class="material-icons">group</span>
+          </div>
+          <div class="export-card-body">
+            <h3>Tagok</h3>
+            <p>Név, öv, telefon, születési dátum, orvosi, tagdíj, szerepkör</p>
+          </div>
+          <button class="export-btn" (click)="exportMembers()" [disabled]="exporting !== null">
+            @if (exporting === 'members') {
+              <span class="material-icons spin">sync</span>
+            } @else {
+              <span class="material-icons">download</span>
+            }
+            .xlsx
+          </button>
+        </div>
+
+        <div class="card export-card">
+          <div class="export-card-icon" style="background:rgba(74,247,122,.15); color:#4af77a">
+            <span class="material-icons">card_membership</span>
+          </div>
+          <div class="export-card-body">
+            <h3>Bérletek</h3>
+            <p>Tag neve, típus, státusz, alkalom maradék, érvényesség</p>
+          </div>
+          <button class="export-btn" (click)="exportMemberships()" [disabled]="exporting !== null">
+            @if (exporting === 'memberships') {
+              <span class="material-icons spin">sync</span>
+            } @else {
+              <span class="material-icons">download</span>
+            }
+            .xlsx
+          </button>
+        </div>
+
+        <div class="card export-card">
+          <div class="export-card-icon" style="background:rgba(247,169,74,.15); color:#f7a94a">
+            <span class="material-icons">receipt_long</span>
+          </div>
+          <div class="export-card-body">
+            <h3>Műveleti napló</h3>
+            <p>Dátum, admin, érintett tag, művelet, bérlet típus</p>
+          </div>
+          <button class="export-btn" (click)="exportAuditLogs()" [disabled]="exporting !== null">
+            @if (exporting === 'audit') {
+              <span class="material-icons spin">sync</span>
+            } @else {
+              <span class="material-icons">download</span>
+            }
+            .xlsx
+          </button>
+        </div>
+
+        <div class="card export-card">
+          <div class="export-card-icon" style="background:rgba(169,74,247,.15); color:#a94af7">
+            <span class="material-icons">table_chart</span>
+          </div>
+          <div class="export-card-body">
+            <h3>Havi admin összesítő</h3>
+            <p>Admin × hónap pivot — ki hány bérletet hozott létre</p>
+          </div>
+          <button class="export-btn" (click)="exportMonthlySummary()" [disabled]="exporting !== null">
+            @if (exporting === 'summary') {
+              <span class="material-icons spin">sync</span>
+            } @else {
+              <span class="material-icons">download</span>
+            }
+            .xlsx
+          </button>
+        </div>
+      </div>
     }
   }
 

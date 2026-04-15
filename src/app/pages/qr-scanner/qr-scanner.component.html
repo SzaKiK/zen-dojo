@@ -53,6 +53,64 @@
         QR beolvasás a megjelenéshez
       </button>
     </div>
+
+    @if (memberActionMsg) {
+      <div class="action-msg {{ memberActionType }}">
+        <span class="material-icons">{{ memberActionType === 'success' ? 'check_circle' : 'error' }}</span>
+        {{ memberActionMsg }}
+      </div>
+    }
+
+    <!-- Manual member selector -->
+    <div class="manual-select-panel">
+      <h3 class="panel-label">
+        <span class="material-icons">person_search</span>
+        Vagy válasszon tagot manuálisan
+      </h3>
+      <div class="member-search-row">
+        <span class="material-icons search-icon">search</span>
+        <input
+          type="text"
+          [(ngModel)]="memberSearchTerm"
+          (input)="onMemberSearchChange()"
+          placeholder="Tag keresése név alapján..."
+          class="member-search-input"
+        />
+        @if (memberSearchTerm) {
+          <button class="clear-search" (click)="memberSearchTerm = ''; filteredMembers = []">
+            <span class="material-icons">close</span>
+          </button>
+        }
+      </div>
+      @if (filteredMembers.length > 0) {
+        <div class="member-results">
+          @for (p of filteredMembers; track p.id) {
+            <button class="member-result-item" (click)="selectManualMember(p)" [disabled]="loadingManualMember">
+              <div class="result-avatar">
+                @if (p.avatar_url) {
+                  <img [src]="p.avatar_url" [alt]="p.full_name" />
+                } @else {
+                  <span class="material-icons">person</span>
+                }
+              </div>
+              <div class="result-info">
+                <span class="result-name">{{ p.full_name }}</span>
+                <span class="result-belt">{{ p.belt_rank || '—' }}</span>
+              </div>
+            </button>
+          }
+        </div>
+      }
+      @if (memberSearchTerm && filteredMembers.length === 0) {
+        <p class="no-results">Nincs találat.</p>
+      }
+      @if (loadingManualMember) {
+        <div class="loading-member">
+          <span class="material-icons spin small">sync</span>
+          <span>Betöltés...</span>
+        </div>
+      }
+    </div>
   }
 
   <!-- ── STEP 2: Camera scanning ─────────────────────────────────────── -->

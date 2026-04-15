@@ -1,0 +1,184 @@
+<div class="sessions-page">
+  <section class="page-title">
+    <div class="title-row">
+      <a routerLink="/admin" class="back-btn">
+        <span class="material-icons">arrow_back</span>
+      </a>
+      <div>
+        <h1>Edzések kezelése</h1>
+        <p class="subtitle">Fix heti edzésbeosztás</p>
+      </div>
+    </div>
+  </section>
+
+  @if (error) {
+    <div class="page-error">
+      <span class="material-icons">error_outline</span>
+      {{ error }}
+    </div>
+  }
+
+  @if (loading) {
+    <div class="loading-state">
+      <span class="material-icons spin">sync</span>
+      <p>Betöltés...</p>
+    </div>
+  } @else if (sessions.length === 0) {
+    <div class="empty-state">
+      <span class="material-icons">fitness_center</span>
+      <p>Még nincs edzés rögzítve.</p>
+      <button class="btn-primary" (click)="openAdd()">
+        <span class="material-icons">add</span>
+        Új edzés hozzáadása
+      </button>
+    </div>
+  } @else {
+    <div class="sessions-list">
+      @for (group of sessionsByDay; track group.day) {
+        <div class="day-group">
+          <h3 class="day-label">{{ group.label }}</h3>
+          @for (s of group.sessions; track s.id) {
+            <div class="session-card">
+              <div class="session-main">
+                <div class="session-time">
+                  <span class="material-icons">schedule</span>
+                  {{ formatTime(s.start_time) }} – {{ formatTime(s.end_time) }}
+                </div>
+                <div class="session-info">
+                  <p class="session-title">{{ s.title }}</p>
+                  <p class="session-meta">
+                    <span class="material-icons tiny">person</span>{{ s.instructor_name }}
+                    @if (s.location) {
+                      <span class="sep">·</span>
+                      <span class="material-icons tiny">place</span>{{ s.location }}
+                    }
+                  </p>
+                  <div class="session-tags">
+                    <span class="tag level">{{ levelLabel(s.level) }}</span>
+                    <span class="tag capacity">
+                      <span class="material-icons tiny">people</span>
+                      {{ s.current_bookings }} / {{ s.capacity }}
+                    </span>
+                  </div>
+                </div>
+              </div>
+              <div class="session-actions">
+                @if (deleteConfirmId === s.id) {
+                  <div class="delete-confirm">
+                    <span>Biztosan törlöd?</span>
+                    <button class="btn-confirm-delete" (click)="deleteSession(s.id)" [disabled]="deletingId === s.id">
+                      @if (deletingId === s.id) {
+                        <span class="material-icons spin tiny">sync</span>
+                      } @else {
+                        Igen, törlöm
+                      }
+                    </button>
+                    <button class="btn-cancel" (click)="cancelDelete()">Mégsem</button>
+                  </div>
+                } @else {
+                  <button class="icon-btn edit" (click)="openEdit(s)" title="Szerkesztés">
+                    <span class="material-icons">edit</span>
+                  </button>
+                  <button class="icon-btn del" (click)="confirmDelete(s.id)" title="Törlés">
+                    <span class="material-icons">delete</span>
+                  </button>
+                }
+              </div>
+            </div>
+          }
+        </div>
+      }
+    </div>
+  }
+
+  <button class="fab" (click)="openAdd()" title="Új edzés">
+    <span class="material-icons">add</span>
+  </button>
+
+  <!-- ── Add / Edit modal ─────────────────────────────────────────── -->
+  @if (showModal) {
+    <div class="modal-backdrop" (click)="closeModal()"></div>
+    <div class="modal">
+      <div class="modal-header">
+        <h2>{{ editingId ? 'Edzés szerkesztése' : 'Új edzés' }}</h2>
+        <button class="close-btn" (click)="closeModal()">
+          <span class="material-icons">close</span>
+        </button>
+      </div>
+
+      @if (modalError) {
+        <div class="modal-error">
+          <span class="material-icons">error_outline</span>
+          {{ modalError }}
+        </div>
+      }
+
+      <form (ngSubmit)="save()" class="modal-form">
+        <div class="form-group">
+          <label>Megnevezés *</label>
+          <input type="text" [(ngModel)]="form.title" name="title" placeholder="pl. Kempo edzés" required />
+        </div>
+
+        <div class="form-group">
+          <label>Edző neve *</label>
+          <input type="text" [(ngModel)]="form.instructor_name" name="instructor_name" placeholder="pl. Metzger Antal" required />
+        </div>
+
+        <div class="form-group">
+          <label>Helyszín</label>
+          <input type="text" [(ngModel)]="form.location" name="location" placeholder="pl. Bicske, Sportcsarnok" />
+        </div>
+
+        <div class="form-row">
+          <div class="form-group">
+            <label>Nap *</label>
+            <select [(ngModel)]="form.day_of_week" name="day_of_week">
+              @for (day of days; track $index) {
+                @if ($index > 0) {
+                  <option [value]="$index">{{ day }}</option>
+                }
+              }
+            </select>
+          </div>
+          <div class="form-group">
+            <label>Szint</label>
+            <select [(ngModel)]="form.level" name="level">
+              @for (l of levels; track l.value) {
+                <option [value]="l.value">{{ l.label }}</option>
+              }
+            </select>
+          </div>
+        </div>
+
+        <div class="form-row">
+          <div class="form-group">
+            <label>Kezdés *</label>
+            <input type="time" [(ngModel)]="form.start_time" name="start_time" required />
+          </div>
+          <div class="form-group">
+            <label>Befejezés *</label>
+            <input type="time" [(ngModel)]="form.end_time" name="end_time" required />
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label>Kapacitás (fő)</label>
+          <input type="number" [(ngModel)]="form.capacity" name="capacity" min="1" max="200" />
+        </div>
+
+        <div class="modal-footer">
+          <button type="submit" class="btn-primary" [disabled]="saving">
+            @if (saving) {
+              <span class="material-icons spin">sync</span>
+              Mentés...
+            } @else {
+              <span class="material-icons">save</span>
+              {{ editingId ? 'Mentés' : 'Létrehoz' }}
+            }
+          </button>
+          <button type="button" class="btn-ghost" (click)="closeModal()">Mégsem</button>
+        </div>
+      </form>
+    </div>
+  }
+</div>

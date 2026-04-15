@@ -88,6 +88,81 @@
   }
 }
 
+// ── Manual member selector ────────────────────────────────
+
+.manual-select-panel {
+  margin: 0 20px 16px;
+  background: var(--surface);
+  border: 1px solid var(--border-sub);
+  border-radius: 14px;
+  padding: 16px;
+
+  .panel-label {
+    display: flex; align-items: center; gap: 6px;
+    font-size: 13px; font-weight: 600; color: var(--text-sub);
+    margin-bottom: 12px;
+    .material-icons { font-size: 18px; color: #4a6cf7; }
+  }
+
+  .member-search-row {
+    display: flex; align-items: center; gap: 8px;
+    background: var(--bg); border: 1px solid var(--border);
+    border-radius: 8px; padding: 0 10px;
+
+    .search-icon { font-size: 18px; color: var(--text-muted); }
+
+    .member-search-input {
+      flex: 1; background: transparent; border: none; outline: none;
+      color: var(--text); padding: 9px 0;
+      font-family: 'Lexend', sans-serif; font-size: 13px;
+    }
+
+    .clear-search {
+      background: none; border: none; padding: 4px; cursor: pointer;
+      .material-icons { font-size: 16px; color: var(--text-muted); }
+    }
+  }
+
+  .member-results {
+    margin-top: 8px; display: flex; flex-direction: column; gap: 4px;
+    max-height: 280px; overflow-y: auto;
+  }
+
+  .member-result-item {
+    display: flex; align-items: center; gap: 10px;
+    background: var(--bg); border: 1px solid var(--border-sub);
+    border-radius: 8px; padding: 8px 10px; cursor: pointer;
+    font-family: 'Lexend', sans-serif; width: 100%; text-align: left;
+    transition: background 0.15s;
+
+    &:hover { background: var(--border-sub); }
+    &:disabled { opacity: 0.6; cursor: default; }
+
+    .result-avatar {
+      width: 36px; height: 36px; border-radius: 50%; background: var(--border-sub);
+      overflow: hidden; border: 1.5px solid #4a6cf7;
+      display: flex; align-items: center; justify-content: center; flex-shrink: 0;
+      img { width: 100%; height: 100%; object-fit: cover; }
+      .material-icons { font-size: 20px; color: var(--placeholder-2); }
+    }
+
+    .result-info {
+      display: flex; flex-direction: column;
+      .result-name { font-size: 13px; font-weight: 600; color: var(--text); }
+      .result-belt { font-size: 11px; color: var(--text-muted); }
+    }
+  }
+
+  .no-results {
+    margin-top: 8px; font-size: 12px; color: var(--text-muted); text-align: center;
+  }
+
+  .loading-member {
+    margin-top: 8px; display: flex; align-items: center; justify-content: center; gap: 6px;
+    font-size: 12px; color: var(--text-muted);
+  }
+}
+
 // ── Camera ────────────────────────────────────────────────
 
 .camera-container {

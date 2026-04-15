@@ -24,7 +24,36 @@
     .brand { font-size: 14px; font-weight: 700; letter-spacing: 2px; color: var(--text); }
   }
 
-  .theme-toggle {
+  .topnav-right {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+
+  .topnav-user {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    text-decoration: none;
+    color: var(--text-sub);
+    font-size: 12px;
+    font-weight: 500;
+    padding: 4px 8px;
+    border-radius: 6px;
+    transition: background 0.2s;
+
+    .material-icons { font-size: 18px; color: #4a6cf7; }
+    .user-name {
+      max-width: 120px;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+
+    &:hover { background: var(--border-sub); }
+  }
+
+  .topnav-btn {
     background: none;
     border: 1px solid var(--border);
     border-radius: 8px;
@@ -43,5 +72,16 @@
       background: var(--border-sub);
       color: var(--text);
     }
+  }
+
+  .login-btn {
+    border-color: rgba(74, 108, 247, 0.3);
+    .material-icons { color: #4a6cf7; }
+  }
+
+  .logout-btn {
+    border-color: rgba(239, 68, 68, 0.2);
+    .material-icons { color: #ef4444; opacity: 0.7; }
+    &:hover .material-icons { opacity: 1; }
   }
 }

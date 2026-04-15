@@ -33,6 +33,12 @@ export class QrScannerComponent implements OnInit, OnDestroy {
   selectedSession: TrainingSession | null = null;
   selectedDate = new Date().toISOString().split('T')[0];
 
+  // Manual member selector
+  allProfiles: Profile[] = [];
+  memberSearchTerm = '';
+  filteredMembers: Profile[] = [];
+  loadingManualMember = false;
+
   // Scanned member
   scannedProfile: Profile | null = null;
   scannedMembership: Membership | null = null;
@@ -59,6 +65,7 @@ export class QrScannerComponent implements OnInit, OnDestroy {
     const adminProfile = this.adminId ? await this.supabase.getProfile(this.adminId) : null;
     this.isFullAdmin = this.supabase.isFullAdmin(adminProfile);
     this.sessions = await this.supabase.getTrainingSessions();
+    this.allProfiles = await this.supabase.getAllProfiles();
     if (this.availableSessions.length > 0) {
       this.selectedSession = this.availableSessions[0];
     }
@@ -94,11 +101,61 @@ export class QrScannerComponent implements OnInit, OnDestroy {
     setTimeout(() => this.startCamera(), 50);
   }
 
+  // ── Manual member selector ──────────────────────────────────────
+
+  onMemberSearchChange() {
+    const term = this.memberSearchTerm.trim().toLowerCase();
+    if (!term) {
+      this.filteredMembers = [];
+      return;
+    }
+    this.filteredMembers = this.allProfiles.filter(p =>
+      p.full_name.toLowerCase().includes(term)
+    ).slice(0, 10);
+  }
+
+  async selectManualMember(profile: Profile) {
+    if (!this.selectedSession) {
+      this.showMemberMsg('Becsekkoláshoz előbb válassz edzést.', 'error');
+      return;
+    }
+    this.loadingManualMember = true;
+    this.memberSearchTerm = '';
+    this.filteredMembers = [];
+    try {
+      this.scannedProfile = profile;
+      this.scannedMembership = await this.supabase.getMembership(profile.id);
+      this.customSessionValue = this.scannedMembership?.remaining_sessions ?? 0;
+      this.memberActionMsg = '';
+      this.showNewMembershipForm = !this.scannedMembership
+        || this.scannedMembership.status !== 'active'
+        || this.scannedMembership.remaining_sessions <= 0;
+      this.step = 'member-detail';
+    } catch {
+      this.showMemberMsg('Hiba a tag adatainak betöltésekor.', 'error');
+    } finally {
+      this.loadingManualMember = false;
+    }
+  }
+
   // ── Camera ───────────────────────────────────────────────────────
 
   async startCamera() {
     this.cameraError = '';
     try {
+      // Check permission state first (not supported on all browsers)
+      if (navigator.permissions?.query) {
+        try {
+          const status = await navigator.permissions.query({ name: 'camera' as PermissionName });
+          if (status.state === 'denied') {
+            this.cameraError = 'A kamera hozzáférés le van tiltva. Kérjük, engedélyezd a böngésző beállításaiban (Beállítások → Webhelyengedélyek → Kamera).';
+            return;
+          }
+        } catch {
+          // permissions.query for camera not supported — proceed to getUserMedia
+        }
+      }
+
       this.stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: 'environment' } });
       setTimeout(() => {
         if (this.videoEl?.nativeElement) {
@@ -108,7 +165,7 @@ export class QrScannerComponent implements OnInit, OnDestroy {
         }
       }, 100);
     } catch {
-      this.cameraError = 'Nem sikerült elérni a kamerát. Engedélyezd a kamera hozzáférést.';
+      this.cameraError = 'Nem sikerült elérni a kamerát. Engedélyezd a kamera hozzáférést a böngésző beállításaiban.';
     }
   }
 

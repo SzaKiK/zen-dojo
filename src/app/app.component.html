@@ -3,13 +3,28 @@
     <span class="material-icons">shield</span>
     <span class="brand">DHKSE</span>
   </a>
-  <button
-    class="theme-toggle"
-    (click)="theme.toggle()"
-    [title]="theme.isDark ? 'Világos téma' : 'Sötét téma'"
-  >
-    <span class="material-icons">{{ theme.isDark ? 'light_mode' : 'dark_mode' }}</span>
-  </button>
+  <div class="topnav-right">
+    @if (isLoggedIn) {
+      <a [routerLink]="dashboardRoute" class="topnav-user" title="Profil">
+        <span class="material-icons">person</span>
+        <span class="user-name">{{ currentProfile?.full_name }}</span>
+      </a>
+      <button class="topnav-btn logout-btn" (click)="logout()" title="Kijelentkezés">
+        <span class="material-icons">logout</span>
+      </button>
+    } @else {
+      <a routerLink="/login" class="topnav-btn login-btn" title="Bejelentkezés">
+        <span class="material-icons">login</span>
+      </a>
+    }
+    <button
+      class="topnav-btn theme-toggle"
+      (click)="theme.toggle()"
+      [title]="theme.isDark ? 'Világos téma' : 'Sötét téma'"
+    >
+      <span class="material-icons">{{ theme.isDark ? 'light_mode' : 'dark_mode' }}</span>
+    </button>
+  </div>
 </nav>
 
 <router-outlet></router-outlet>

@@ -4,9 +4,11 @@
       <span class="material-icons">shield</span>
       <span class="brand">DHKSE</span>
     </div>
-    <a routerLink="/login" class="login-link">
-      <span class="material-icons">login</span>
-    </a>
+    @if (!isLoggedIn) {
+      <a routerLink="/login" class="login-link">
+        <span class="material-icons">login</span>
+      </a>
+    }
   </header>
 
   <section class="hero">
@@ -18,11 +20,24 @@
       <h1>DHKSE</h1>
       <p class="description">Kempo és harcművészeti bérlet- és jelenlétkezelő rendszer. Nihon Kempo Jitsu oktatás Bicskén és Tabajdon.</p>
       <div class="cta-buttons">
-        <a routerLink="/register" class="btn-primary">
-          Csatlakozz hozzánk
-          <span class="material-icons">arrow_forward</span>
-        </a>
-        <a routerLink="/login" class="btn-secondary">Bejelentkezés</a>
+        @if (isLoggedIn) {
+          <a [routerLink]="dashboardRoute" class="btn-primary">
+            @if (isFullAdmin) {
+              Vezérlőpult
+            } @else if (isAdmin) {
+              Bérletek kezelése
+            } @else {
+              Bérletem megtekintése
+            }
+            <span class="material-icons">arrow_forward</span>
+          </a>
+        } @else {
+          <a routerLink="/register" class="btn-primary">
+            Csatlakozz hozzánk
+            <span class="material-icons">arrow_forward</span>
+          </a>
+          <a routerLink="/login" class="btn-secondary">Bejelentkezés</a>
+        }
       </div>
     </div>
   </section>
