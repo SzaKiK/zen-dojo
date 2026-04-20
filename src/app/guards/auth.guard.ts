@@ -41,3 +41,13 @@ export const fullAdminGuard = async () => {
   if (supabase.isFullAdmin(profile)) return true;
   return router.createUrlTree(['/membership-card']);
 };
+
+export const anyAdminGuard = async () => {
+  const supabase = inject(SupabaseService);
+  const router = inject(Router);
+  const { data } = await supabase.getSession();
+  if (!data?.session) return router.createUrlTree(['/login']);
+  const profile = await waitForProfile(supabase);
+  if (supabase.isAnyAdmin(profile)) return true;
+  return router.createUrlTree(['/membership-card']);
+};

@@ -4,7 +4,7 @@
       <span class="material-icons">shield</span>
       <span class="brand">DHKSE</span>
     </div>
-    <a routerLink="/admin" class="back-btn" aria-label="Vissza a vezérlőpulthoz">
+    <a [routerLink]="isFullAdmin ? '/admin' : '/membership-card'" class="back-btn" aria-label="Vissza">
       <span class="material-icons">arrow_back</span>
     </a>
   </header>
@@ -57,7 +57,7 @@
             <span class="status-badge" [class]="member.status">
               {{ member.status === 'active' ? 'Aktív' : 'Lejárt' }}
             </span>
-            <span class="admin-role-badge" [class.full]="member.admin_role === 'full_admin'" [class.membership]="member.admin_role === 'membership_admin'">
+            <span class="admin-role-badge" [class.full]="member.admin_role === 'full_admin'" [class.membership]="member.admin_role === 'membership_admin'" [class.tag]="member.admin_role === 'tag_admin'">
               {{ getAdminRoleLabel(member) }}
             </span>
             <p class="belt">{{ member.belt_rank || '—' }}</p>
@@ -71,6 +71,7 @@
                   (change)="changeAdminRole(member, $any($event.target).value, $event)"
                 >
                   <option value="">Tanuló</option>
+                  <option value="tag_admin">Tagkezelő</option>
                   <option value="membership_admin">Edző (tagságkezelő)</option>
                   <option value="full_admin">Vezető edző</option>
                 </select>
@@ -107,7 +108,7 @@
         <span>Bérletek</span>
       </a>
     </nav>
-  } @else {
+  } @else if (isAnyAdmin && !isFullAdmin && isMembershipAdmin) {
     <nav class="bottom-nav">
       <a routerLink="/berletek" class="nav-item">
         <span class="material-icons">card_membership</span>
@@ -120,6 +121,40 @@
       <a routerLink="/members" class="nav-item active">
         <span class="material-icons">group</span>
         <span>Tagok</span>
+      </a>
+      <a routerLink="/training" class="nav-item">
+        <span class="material-icons">fitness_center</span>
+        <span>Edzések</span>
+      </a>
+    </nav>
+  } @else if (isAnyAdmin && !isFullAdmin && isMembershipAdmin) {
+    <nav class="bottom-nav">
+      <a routerLink="/berletek" class="nav-item">
+        <span class="material-icons">card_membership</span>
+        <span>Bérletek</span>
+      </a>
+      <a routerLink="/qr-scanner" class="nav-item">
+        <span class="material-icons">qr_code_scanner</span>
+        <span>QR Scan</span>
+      </a>
+      <a routerLink="/members" class="nav-item active">
+        <span class="material-icons">group</span>
+        <span>Tagok</span>
+      </a>
+      <a routerLink="/training" class="nav-item">
+        <span class="material-icons">fitness_center</span>
+        <span>Edzések</span>
+      </a>
+    </nav>
+  } @else if (isAnyAdmin && !isFullAdmin) {
+    <nav class="bottom-nav">
+      <a routerLink="/members" class="nav-item active">
+        <span class="material-icons">group</span>
+        <span>Tagok</span>
+      </a>
+      <a routerLink="/membership-card" class="nav-item">
+        <span class="material-icons">home</span>
+        <span>Főoldal</span>
       </a>
       <a routerLink="/training" class="nav-item">
         <span class="material-icons">fitness_center</span>

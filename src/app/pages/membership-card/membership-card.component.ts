@@ -22,6 +22,7 @@ export class MembershipCardComponent implements OnInit {
   isAdmin = false;
   isFullAdmin = false;
   canManageMembership = false;
+  canEditMemberDetails = false;
   isViewingOther = false;
   currentUserId = '';
 
@@ -97,10 +98,11 @@ export class MembershipCardComponent implements OnInit {
       this.canManageMembership = this.supabase.isMembershipAdmin(currentProfile);
       this.isFullAdmin = this.supabase.isFullAdmin(currentProfile);
       this.isAdmin = this.isFullAdmin;
+      this.canEditMemberDetails = this.supabase.isTagAdmin(currentProfile);
 
       // Check if viewing another user's profile (admin feature)
       const targetUserId = this.route.snapshot.paramMap.get('userId');
-      if (targetUserId && this.canManageMembership && targetUserId !== this.currentUserId) {
+      if (targetUserId && (this.canManageMembership || this.canEditMemberDetails) && targetUserId !== this.currentUserId) {
         this.isViewingOther = true;
         this.profile = await this.supabase.getProfile(targetUserId);
       } else {
@@ -123,7 +125,7 @@ export class MembershipCardComponent implements OnInit {
         }));
 
         // Load admin-only data when admin is viewing
-        if (this.isFullAdmin) {
+        if (this.canEditMemberDetails) {
           [this.beltExams, this.trainingCamps] = await Promise.all([
             this.supabase.getBeltExams(this.profile.id),
             this.supabase.getTrainingCamps(this.profile.id),
@@ -241,7 +243,7 @@ export class MembershipCardComponent implements OnInit {
   // ── Admin profile fields ─────────────────────────────────────────
 
   async saveAdminProfileFields() {
-    if (!this.profile || !this.isAdmin) return;
+    if (!this.profile || !this.canEditMemberDetails) return;
     this.savingProfile = true;
     const { error } = await this.supabase.updateProfile(this.profile.id, {
       belt_rank: this.editBeltRank || null,

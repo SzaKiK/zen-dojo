@@ -16,6 +16,8 @@ export class MemberListComponent implements OnInit {
   activeFilter = 'all';
   members: (Profile & { status: string })[] = [];
   isFullAdmin = false;
+  isMembershipAdmin = false;
+  isAnyAdmin = false;
   currentUserId: string | null = null;
 
   // Demo members matching the Stitch design
@@ -55,6 +57,8 @@ export class MemberListComponent implements OnInit {
     if (this.currentUserId) {
       const me = await this.supabase.getProfile(this.currentUserId);
       this.isFullAdmin = this.supabase.isFullAdmin(me);
+      this.isMembershipAdmin = this.supabase.isMembershipAdmin(me);
+      this.isAnyAdmin = this.supabase.isAnyAdmin(me);
     }
 
     const profiles = await this.supabase.getAllProfiles();
@@ -83,10 +87,11 @@ export class MemberListComponent implements OnInit {
   getAdminRoleLabel(member: Profile): string {
     if (member.admin_role === 'full_admin') return 'Vezető edző';
     if (member.admin_role === 'membership_admin') return 'Edző (tagságkezelő)';
+    if (member.admin_role === 'tag_admin') return 'Tagkezelő';
     return 'Tanuló';
   }
 
-  async changeAdminRole(member: Profile & { status: string }, role: '' | 'membership_admin' | 'full_admin', event: Event) {
+  async changeAdminRole(member: Profile & { status: string }, role: '' | 'membership_admin' | 'full_admin' | 'tag_admin', event: Event) {
     event.stopPropagation();
     const nextRole: AdminRole = role === '' ? null : role;
     const previousRole = member.admin_role;

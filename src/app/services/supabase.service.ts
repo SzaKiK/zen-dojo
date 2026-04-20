@@ -9,7 +9,7 @@ export const BELT_RANKS = [
   '1.dan','2.dan','3.dan','4.dan','5.dan','6.dan','7.dan','8.dan','9.dan','10.dan',
 ];
 
-export type AdminRole = 'full_admin' | 'membership_admin' | null;
+export type AdminRole = 'full_admin' | 'membership_admin' | 'tag_admin' | null;
 
 export interface Profile {
   id: string;
@@ -186,6 +186,21 @@ export class SupabaseService {
     if (!profile) return false;
     return profile.admin_role === 'full_admin'
       || profile.admin_role === 'membership_admin'
+      || (profile.admin_role == null && profile.is_admin);
+  }
+
+  isTagAdmin(profile: Profile | null | undefined): boolean {
+    if (!profile) return false;
+    return profile.admin_role === 'full_admin'
+      || profile.admin_role === 'tag_admin'
+      || (profile.admin_role == null && profile.is_admin);
+  }
+
+  isAnyAdmin(profile: Profile | null | undefined): boolean {
+    if (!profile) return false;
+    return profile.admin_role === 'full_admin'
+      || profile.admin_role === 'membership_admin'
+      || profile.admin_role === 'tag_admin'
       || (profile.admin_role == null && profile.is_admin);
   }
 

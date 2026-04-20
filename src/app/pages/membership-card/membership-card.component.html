@@ -160,7 +160,7 @@
     }
 
     <!-- Admin-only member details -->
-    @if (isFullAdmin) {
+    @if (canEditMemberDetails) {
       <div class="admin-details-panel">
         <h3 class="panel-title">
           <span class="material-icons">admin_panel_settings</span>
@@ -338,6 +338,21 @@
       <a routerLink="/members" class="nav-item">
         <span class="material-icons">group</span>
         <span>Tagok</span>
+      </a>
+      <a routerLink="/training" class="nav-item">
+        <span class="material-icons">fitness_center</span>
+        <span>Edzések</span>
+      </a>
+    </nav>
+  } @else if (canEditMemberDetails) {
+    <nav class="bottom-nav">
+      <a routerLink="/members" class="nav-item">
+        <span class="material-icons">group</span>
+        <span>Tagok</span>
+      </a>
+      <a routerLink="/membership-card" class="nav-item">
+        <span class="material-icons">home</span>
+        <span>Főoldal</span>
       </a>
       <a routerLink="/training" class="nav-item">
         <span class="material-icons">fitness_center</span>
