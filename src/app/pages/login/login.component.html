@@ -42,11 +42,42 @@
         />
       </div>
 
+      <button type="button" class="forgot-link" (click)="sendResetFromLoginEmail()" [disabled]="resetLoading">
+        {{ resetLoading ? 'Küldés...' : 'Elfelejtett jelszó?' }}
+      </button>
+
       <button type="submit" class="btn-primary" [disabled]="loading">
         {{ loading ? 'Bejelentkezés...' : 'Bejelentkezés' }}
         <span class="material-icons">arrow_forward</span>
       </button>
     </form>
+
+    @if (showResetPanel) {
+    <section class="reset-panel">
+      <h3>Elfelejtett jelszó</h3>
+      <p>Add meg az email címed, és küldünk egy jelszó-visszaállító linket.</p>
+      <div class="form-group">
+        <label for="reset-email">Reset email</label>
+        <input
+          type="email"
+          id="reset-email"
+          [(ngModel)]="resetEmail"
+          name="resetEmail"
+          placeholder="tag&#64;dhkse.hu"
+        />
+      </div>
+      <button type="button" class="btn-reset" (click)="requestPasswordReset()" [disabled]="resetLoading">
+        {{ resetLoading ? 'Küldés...' : 'Reset email küldése' }}
+      </button>
+
+      @if (resetMessage) {
+        <div class="reset-message success">{{ resetMessage }}</div>
+      }
+      @if (resetError) {
+        <div class="reset-message error">{{ resetError }}</div>
+      }
+    </section>
+    }
 
     <p class="register-link">
       Nincs még fiókod?

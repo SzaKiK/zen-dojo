@@ -4,6 +4,7 @@ import { authGuard, adminGuard, fullAdminGuard, anyAdminGuard } from './guards/a
 export const routes: Routes = [
   { path: '', loadComponent: () => import('./pages/welcome/welcome.component').then(m => m.WelcomeComponent) },
   { path: 'login', loadComponent: () => import('./pages/login/login.component').then(m => m.LoginComponent) },
+  { path: 'reset-password', loadComponent: () => import('./pages/reset-password/reset-password.component').then(m => m.ResetPasswordComponent) },
   { path: 'register', loadComponent: () => import('./pages/register/register.component').then(m => m.RegisterComponent) },
   { path: 'membership-card', canActivate: [authGuard], loadComponent: () => import('./pages/membership-card/membership-card.component').then(m => m.MembershipCardComponent) },
   { path: 'training', canActivate: [authGuard], loadComponent: () => import('./pages/training/training.component').then(m => m.TrainingComponent) },

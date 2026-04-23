@@ -1,19 +1,10 @@
--- Migration 017: Fix membership delete FK violation in audit log
+-- Migration 023: Avoid target_user_id FK violations during cascaded profile deletes.
 --
--- Problem: Three duplicate triggers all fire on DELETE and call
--- log_admin_action(..., OLD.id, ...) — inserting a new admin_action_logs row
--- with target_membership_id = OLD.id in the same transaction as the DELETE.
--- The deferred FK check at transaction end fails because the membership is gone.
---
--- Fix: Drop all duplicate triggers, replace with a single clean one that passes
--- NULL for target_membership_id on DELETE (the ID is preserved in JSON details).
+-- When a profile is hard-deleted, memberships can be deleted by FK cascade.
+-- The memberships DELETE trigger must not write OLD.user_id into
+-- admin_action_logs.target_user_id, because that profile row may already be gone
+-- by commit time. Keep the deleted user id in details JSON instead.
 
--- 1) Drop all three broken/duplicate triggers
-DROP TRIGGER IF EXISTS memberships_lifecycle_audit_after_delete ON public.memberships;
-DROP TRIGGER IF EXISTS memberships_lifecycle_guard_and_audit_before ON public.memberships;
-DROP TRIGGER IF EXISTS memberships_lifecycle_guard_before_insert ON public.memberships;
-
--- 2) Create a single consolidated trigger function
 CREATE OR REPLACE FUNCTION public.memberships_lifecycle_fn()
 RETURNS TRIGGER
 LANGUAGE plpgsql
@@ -23,15 +14,12 @@ AS $$
 DECLARE
   v_actor UUID := auth.uid();
 BEGIN
-  -- ── INSERT ───────────────────────────────────────────────────────────────
   IF TG_OP = 'INSERT' THEN
-    -- Clamp remaining_sessions to 0 and mark expired if empty
     IF NEW.remaining_sessions IS NOT NULL AND NEW.remaining_sessions <= 0 THEN
       NEW.remaining_sessions := 0;
       NEW.status := 'expired';
     END IF;
 
-    -- Enforce one active membership per user
     IF NEW.status = 'active' AND EXISTS (
       SELECT 1 FROM public.memberships m
       WHERE m.user_id = NEW.user_id AND m.status = 'active'
@@ -42,7 +30,7 @@ BEGIN
     PERFORM public.log_admin_action(
       'membership_created',
       NEW.user_id,
-      NEW.id,   -- FK is safe here: row is being inserted, not deleted
+      NEW.id,
       NULL,
       NEW.type,
       jsonb_build_object(
@@ -56,7 +44,6 @@ BEGIN
     RETURN NEW;
   END IF;
 
-  -- ── UPDATE ───────────────────────────────────────────────────────────────
   IF TG_OP = 'UPDATE' THEN
     IF NEW.remaining_sessions IS NOT NULL AND NEW.remaining_sessions <= 0 THEN
       NEW.remaining_sessions := 0;
@@ -107,15 +94,11 @@ BEGIN
     RETURN NEW;
   END IF;
 
-  -- ── DELETE ───────────────────────────────────────────────────────────────
   IF TG_OP = 'DELETE' THEN
-    -- IMPORTANT: pass NULL for target_user_id and target_membership_id on DELETE.
-    -- During cascaded profile deletion, OLD.user_id may no longer be a valid
-    -- profiles FK by commit time. Keep IDs in details JSON instead.
     PERFORM public.log_admin_action(
       'membership_deleted',
       NULL,
-      NULL,   -- <-- NULL instead of OLD.id to avoid FK violation on commit
+      NULL,
       NULL,
       OLD.type,
       jsonb_build_object(
@@ -134,10 +117,3 @@ BEGIN
   RETURN COALESCE(NEW, OLD);
 END;
 $$;
-
--- 3) Register a single BEFORE trigger for INSERT/UPDATE (needs to return modified NEW)
-CREATE TRIGGER memberships_lifecycle
-  BEFORE INSERT OR UPDATE OR DELETE
-  ON public.memberships
-  FOR EACH ROW
-  EXECUTE FUNCTION public.memberships_lifecycle_fn();

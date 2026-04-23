@@ -100,20 +100,48 @@
 
     .chevron { color: var(--border-muted); }
 
-    .delete-member-btn {
-      border: 1px solid rgba(239, 68, 68, 0.4);
-      background: rgba(239, 68, 68, 0.12);
-      color: #ef4444;
-      width: 32px;
-      height: 32px;
-      border-radius: 8px;
+    .member-actions {
       display: inline-flex;
       align-items: center;
-      justify-content: center;
-      cursor: pointer;
+      gap: 6px;
+      margin-left: 4px;
       flex-shrink: 0;
 
-      .material-icons { font-size: 18px; }
+      .action-btn {
+        width: 32px;
+        height: 32px;
+        border-radius: 8px;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        cursor: pointer;
+        border: 1px solid transparent;
+
+        .material-icons { font-size: 18px; }
+
+        &:disabled {
+          opacity: 0.45;
+          cursor: not-allowed;
+        }
+
+        &.reset {
+          border-color: rgba(59, 130, 246, 0.4);
+          background: rgba(59, 130, 246, 0.12);
+          color: #2563eb;
+        }
+
+        &.soft {
+          border-color: rgba(245, 158, 11, 0.45);
+          background: rgba(245, 158, 11, 0.16);
+          color: #d97706;
+        }
+
+        &.hard {
+          border-color: rgba(239, 68, 68, 0.4);
+          background: rgba(239, 68, 68, 0.12);
+          color: #ef4444;
+        }
+      }
     }
 
     .member-info {
@@ -163,6 +191,25 @@
         &.tag {
           background: rgba(16, 185, 129, 0.16);
           color: #059669;
+        }
+      }
+
+      .account-badge {
+        display: inline-block;
+        margin-left: 8px;
+        padding: 2px 8px;
+        border-radius: 10px;
+        font-size: 10px;
+        font-weight: 600;
+
+        &.active {
+          background: rgba(34, 197, 94, 0.15);
+          color: #16a34a;
+        }
+
+        &.disabled {
+          background: rgba(239, 68, 68, 0.14);
+          color: #dc2626;
         }
       }
 

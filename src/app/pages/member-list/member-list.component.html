@@ -60,6 +60,11 @@
             <span class="admin-role-badge" [class.full]="member.admin_role === 'full_admin'" [class.membership]="member.admin_role === 'membership_admin'" [class.tag]="member.admin_role === 'tag_admin'">
               {{ getAdminRoleLabel(member) }}
             </span>
+            @if (member.is_disabled) {
+              <span class="account-badge disabled">Fiók inaktív</span>
+            } @else {
+              <span class="account-badge active">Fiók aktív</span>
+            }
             <p class="belt">{{ member.belt_rank || '—' }}</p>
 
             @if (isFullAdmin) {
@@ -79,9 +84,35 @@
             }
           </div>
           @if (isFullAdmin) {
-            <button class="delete-member-btn" type="button" (click)="deleteMember(member, $event)" title="Tag törlése">
-              <span class="material-icons">delete</span>
-            </button>
+            <div class="member-actions" (click)="$event.stopPropagation()">
+              <button
+                class="action-btn reset"
+                type="button"
+                (click)="sendResetEmail(member, $event)"
+                [disabled]="memberActionBusyId === member.id || !member.email || member.is_disabled"
+                title="Jelszó reset email"
+              >
+                <span class="material-icons">mail</span>
+              </button>
+              <button
+                class="action-btn soft"
+                type="button"
+                (click)="softDeleteMember(member, $event)"
+                [disabled]="memberActionBusyId === member.id || member.is_disabled"
+                title="Felhasználó inaktiválása"
+              >
+                <span class="material-icons">person_off</span>
+              </button>
+              <button
+                class="action-btn hard"
+                type="button"
+                (click)="deleteMember(member, $event)"
+                [disabled]="memberActionBusyId === member.id"
+                title="Felhasználó végleges törlése"
+              >
+                <span class="material-icons">delete_forever</span>
+              </button>
+            </div>
           }
           <span class="material-icons chevron">chevron_right</span>
         </div>

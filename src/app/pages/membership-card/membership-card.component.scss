@@ -125,6 +125,15 @@
       margin-bottom: 8px;
     }
 
+    .account-state {
+      font-size: 12px;
+      font-weight: 600;
+      margin-bottom: 8px;
+
+      &.active { color: #16a34a; }
+      &.disabled { color: #dc2626; }
+    }
+
     .belt-level {
       font-size: 13px;
       color: #4a6cf7;
@@ -564,6 +573,18 @@
     background: rgba(34, 197, 94, 0.1);
     border-radius: 8px;
     text-align: center;
+
+    &.error {
+      color: #dc2626;
+      background: rgba(239, 68, 68, 0.12);
+    }
+  }
+
+  .panel-subtitle {
+    margin: -2px 0 4px;
+    font-size: 12px;
+    color: var(--text-muted);
+    line-height: 1.4;
   }
 
   .detail-row {
@@ -670,6 +691,72 @@
     .material-icons { font-size: 18px; }
     &:disabled { opacity: 0.5; cursor: not-allowed; }
     &:not(:disabled):hover { opacity: 0.85; }
+  }
+
+  .btn-secondary {
+    background: rgba(74, 108, 247, 0.1);
+    color: #3156eb;
+    border: 1px solid #4a6cf7;
+    border-radius: 10px;
+    padding: 9px 14px;
+    font-size: 13px;
+    font-family: 'Lexend', sans-serif;
+    font-weight: 600;
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+
+    .material-icons { font-size: 17px; }
+
+    &:disabled {
+      opacity: 0.45;
+      cursor: not-allowed;
+    }
+  }
+
+  .auth-actions {
+    display: grid;
+    gap: 10px;
+  }
+
+  .danger-zone {
+    border-top: 1px dashed var(--border-muted);
+    padding-top: 12px;
+    display: grid;
+    gap: 8px;
+
+    .btn-danger {
+      border-radius: 10px;
+      border: 1px solid transparent;
+      padding: 9px 12px;
+      font-size: 13px;
+      font-family: 'Lexend', sans-serif;
+      font-weight: 600;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+
+      &.soft {
+        background: rgba(245, 158, 11, 0.15);
+        color: #b45309;
+        border-color: rgba(245, 158, 11, 0.35);
+      }
+
+      &.hard {
+        background: rgba(239, 68, 68, 0.14);
+        color: #dc2626;
+        border-color: rgba(239, 68, 68, 0.35);
+      }
+
+      &:disabled {
+        opacity: 0.45;
+        cursor: not-allowed;
+      }
+    }
   }
 
   .history-list {
@@ -810,4 +897,8 @@
       }
     }
   }
+}
+
+.auth-account-panel {
+  border-color: rgba(74, 108, 247, 0.28);
 }

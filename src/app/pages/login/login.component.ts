@@ -16,6 +16,11 @@ export class LoginComponent implements OnInit {
   password = '';
   error = '';
   loading = false;
+  resetEmail = '';
+  resetLoading = false;
+  resetMessage = '';
+  resetError = '';
+  showResetPanel = false;
 
   constructor(
     private supabase: SupabaseService,
@@ -23,10 +28,24 @@ export class LoginComponent implements OnInit {
   ) {}
 
   async ngOnInit() {
+    // Older reset emails may still point to /login. In recovery mode, always
+    // send user to the password reset screen instead of role-based redirect.
+    const hash = typeof window !== 'undefined' ? window.location.hash : '';
+    const search = typeof window !== 'undefined' ? window.location.search : '';
+    const isRecoveryUrl = hash.includes('type=recovery') || search.includes('type=recovery');
+    if (isRecoveryUrl || this.supabase.isPasswordRecoveryFlow()) {
+      await this.router.navigateByUrl('/reset-password');
+      return;
+    }
+
     // If already logged in, redirect to appropriate page
     try {
       const { data } = await this.supabase.getSession();
       if (data?.session) {
+        if (this.supabase.isPasswordRecoveryFlow()) {
+          await this.router.navigateByUrl('/reset-password');
+          return;
+        }
         await this.redirectAfterLogin();
       }
     } catch {
@@ -51,6 +70,34 @@ export class LoginComponent implements OnInit {
     }
   }
 
+  async requestPasswordReset() {
+    this.resetLoading = true;
+    this.resetError = '';
+    this.resetMessage = '';
+
+    const emailToReset = (this.resetEmail || this.email).trim().toLowerCase();
+    if (!emailToReset) {
+      this.resetLoading = false;
+      this.resetError = 'Adj meg egy email címet a jelszó-visszaállításhoz.';
+      return;
+    }
+
+    const { error } = await this.supabase.requestPasswordReset(emailToReset);
+    this.resetLoading = false;
+
+    if (error) {
+      this.resetError = error.message || 'Nem sikerült reset emailt küldeni.';
+      return;
+    }
+
+    this.resetMessage = `Reset email elküldve: ${emailToReset}`;
+  }
+
+  async sendResetFromLoginEmail() {
+    this.resetEmail = (this.email || '').trim().toLowerCase();
+    this.showResetPanel = true;
+  }
+
   private async redirectAfterLogin() {
     // Wait for the reactive profile from onAuthStateChange (max 3s), then redirect by role.
     // This avoids a separate getProfile call that could hang or fail.
@@ -61,6 +108,12 @@ export class LoginComponent implements OnInit {
         catchError(() => of(null))
       )
     );
+    if (profile?.is_disabled) {
+      await this.supabase.signOut();
+      this.error = 'A fiók inaktív. Kérlek keresd a vezető edzőt.';
+      return;
+    }
+
     if (this.supabase.isFullAdmin(profile)) {
       await this.router.navigateByUrl('/admin');
     } else if (this.supabase.isMembershipAdmin(profile)) {

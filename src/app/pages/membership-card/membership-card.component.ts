@@ -38,6 +38,12 @@ export class MembershipCardComponent implements OnInit {
   editMedicalValidity = '';
   editMembershipFeePaid = false;
 
+  // Full-admin auth account actions (only when viewing another member)
+  authEditEmail = '';
+  authActionBusy = false;
+  authActionMsg = '';
+  authActionType: 'success' | 'error' = 'success';
+
   // New belt exam form
   newExamDate = '';
   newExamRank = '9.kyu';
@@ -135,6 +141,8 @@ export class MembershipCardComponent implements OnInit {
           this.editMembershipFeePaid = this.profile.membership_fee_paid ?? false;
         }
 
+        this.authEditEmail = this.profile.email ?? '';
+
         // Generate QR code
         if (this.profile.qr_code_id) {
           try {
@@ -158,6 +166,10 @@ export class MembershipCardComponent implements OnInit {
 
   get headerRoute(): string {
     return this.isViewingOther ? '/members' : '/';
+  }
+
+  get canManageAuthAccount(): boolean {
+    return this.isFullAdmin && this.isViewingOther && !!this.profile;
   }
 
   async adjustSessions(delta: number) {
@@ -238,6 +250,83 @@ export class MembershipCardComponent implements OnInit {
     this.memberActionMsg = msg;
     this.memberActionType = type;
     setTimeout(() => (this.memberActionMsg = ''), 3000);
+  }
+
+  private showAuthMsg(msg: string, type: 'success' | 'error') {
+    this.authActionMsg = msg;
+    this.authActionType = type;
+    setTimeout(() => (this.authActionMsg = ''), 3500);
+  }
+
+  async saveAuthEmail() {
+    if (!this.profile || !this.canManageAuthAccount) return;
+    const newEmail = this.authEditEmail.trim().toLowerCase();
+    if (!newEmail) {
+      this.showAuthMsg('Email cím kötelező.', 'error');
+      return;
+    }
+
+    this.authActionBusy = true;
+    const { error } = await this.supabase.updateUserEmailAdmin(this.profile.id, newEmail);
+    this.authActionBusy = false;
+    if (error) {
+      this.showAuthMsg(error.message || 'Email módosítás sikertelen.', 'error');
+      return;
+    }
+
+    this.profile = { ...this.profile, email: newEmail };
+    this.showAuthMsg('Bejelentkezési email frissítve.', 'success');
+  }
+
+  async sendPasswordResetForViewedUser() {
+    if (!this.profile || !this.canManageAuthAccount) return;
+    const email = (this.profile.email ?? '').trim().toLowerCase();
+    if (!email) {
+      this.showAuthMsg('Nincs mentett email cím a fiókhoz.', 'error');
+      return;
+    }
+
+    this.authActionBusy = true;
+    const { error } = await this.supabase.requestPasswordReset(email);
+    this.authActionBusy = false;
+    if (error) {
+      this.showAuthMsg(error.message || 'Reset email küldése sikertelen.', 'error');
+      return;
+    }
+
+    this.showAuthMsg(`Reset email elküldve: ${email}`, 'success');
+  }
+
+  async softDeleteViewedUser() {
+    if (!this.profile || !this.canManageAuthAccount) return;
+    if (!confirm(`Biztosan inaktiválod: ${this.profile.full_name}?`)) return;
+
+    this.authActionBusy = true;
+    const { error } = await this.supabase.softDeleteUser(this.profile.id, 'Inaktiválás a tagi adatlapról');
+    this.authActionBusy = false;
+    if (error) {
+      this.showAuthMsg(error.message || 'Inaktiválás sikertelen.', 'error');
+      return;
+    }
+
+    this.profile = { ...this.profile, is_disabled: true, deleted_at: new Date().toISOString() };
+    this.showAuthMsg('Fiók inaktiválva (soft delete).', 'success');
+  }
+
+  async hardDeleteViewedUser() {
+    if (!this.profile || !this.canManageAuthAccount) return;
+    const verification = prompt(`Végleges törlés: ${this.profile.full_name}\nÍrd be: TORLES`);
+    if (verification !== 'TORLES') return;
+
+    this.authActionBusy = true;
+    const { error } = await this.supabase.hardDeleteUser(this.profile.id);
+    this.authActionBusy = false;
+    if (error) {
+      this.showAuthMsg(error.message || 'Végleges törlés sikertelen.', 'error');
+      return;
+    }
+
+    await this.router.navigateByUrl('/members');
   }
 
   // ── Admin profile fields ─────────────────────────────────────────

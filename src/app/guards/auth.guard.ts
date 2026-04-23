@@ -7,7 +7,14 @@ export const authGuard = async () => {
   const supabase = inject(SupabaseService);
   const router = inject(Router);
   const { data } = await supabase.getSession();
-  if (data?.session) return true;
+  if (data?.session) {
+    const profile = await waitForProfile(supabase);
+    if (profile?.is_disabled) {
+      await supabase.signOut();
+      return router.createUrlTree(['/login']);
+    }
+    return true;
+  }
   return router.createUrlTree(['/login']);
 };
 
@@ -28,6 +35,10 @@ export const adminGuard = async () => {
   const { data } = await supabase.getSession();
   if (!data?.session) return router.createUrlTree(['/login']);
   const profile = await waitForProfile(supabase);
+  if (profile?.is_disabled) {
+    await supabase.signOut();
+    return router.createUrlTree(['/login']);
+  }
   if (supabase.isMembershipAdmin(profile)) return true;
   return router.createUrlTree(['/membership-card']);
 };
@@ -38,6 +49,10 @@ export const fullAdminGuard = async () => {
   const { data } = await supabase.getSession();
   if (!data?.session) return router.createUrlTree(['/login']);
   const profile = await waitForProfile(supabase);
+  if (profile?.is_disabled) {
+    await supabase.signOut();
+    return router.createUrlTree(['/login']);
+  }
   if (supabase.isFullAdmin(profile)) return true;
   return router.createUrlTree(['/membership-card']);
 };
@@ -48,6 +63,10 @@ export const anyAdminGuard = async () => {
   const { data } = await supabase.getSession();
   if (!data?.session) return router.createUrlTree(['/login']);
   const profile = await waitForProfile(supabase);
+  if (profile?.is_disabled) {
+    await supabase.signOut();
+    return router.createUrlTree(['/login']);
+  }
   if (supabase.isAnyAdmin(profile)) return true;
   return router.createUrlTree(['/membership-card']);
 };

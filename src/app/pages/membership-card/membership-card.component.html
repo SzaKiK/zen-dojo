@@ -36,6 +36,14 @@
       <div class="card-body">
         <h2 class="member-name">{{ profile?.full_name }}</h2>
         <p class="member-id">ID: #{{ profile?.qr_code_id }}</p>
+        @if (profile?.email) {
+          <p class="member-id">Auth email: {{ profile?.email }}</p>
+        }
+        @if (profile?.is_disabled) {
+          <p class="account-state disabled">Fiók státusz: Inaktív</p>
+        } @else {
+          <p class="account-state active">Fiók státusz: Aktív</p>
+        }
         <p class="belt-level">{{ profile?.belt_rank || '—' }}</p>
         @if (profile?.birth_date) {
           <p class="birth-date">
@@ -159,12 +167,57 @@
       </div>
     }
 
-    <!-- Admin-only member details -->
+    @if (canManageAuthAccount) {
+      <div class="admin-details-panel auth-account-panel">
+        <h3 class="panel-title">
+          <span class="material-icons">vpn_key</span>
+          Auth felhasználó (Supabase)
+        </h3>
+        <p class="panel-subtitle">A bejelentkezési adatok itt kezelhetők. A profil mezők külön, lent szerkeszthetők.</p>
+
+        @if (authActionMsg) {
+          <div class="save-msg" [class.error]="authActionType === 'error'">
+            <span class="material-icons">{{ authActionType === 'success' ? 'check_circle' : 'error' }}</span>
+            {{ authActionMsg }}
+          </div>
+        }
+
+        <div class="detail-field">
+          <label>Bejelentkezési email</label>
+          <input type="email" [(ngModel)]="authEditEmail" class="field-input" placeholder="tag@dhkse.hu" />
+        </div>
+
+        <div class="auth-actions">
+          <button class="btn-save-admin" (click)="saveAuthEmail()" [disabled]="authActionBusy">
+            <span class="material-icons">alternate_email</span>
+            {{ authActionBusy ? 'Mentés...' : 'Email módosítása' }}
+          </button>
+
+          <button class="btn-secondary" (click)="sendPasswordResetForViewedUser()" [disabled]="authActionBusy || !profile?.email">
+            <span class="material-icons">mail</span>
+            Reset email küldése
+          </button>
+        </div>
+
+        <div class="danger-zone">
+          <button class="btn-danger soft" (click)="softDeleteViewedUser()" [disabled]="authActionBusy || profile?.is_disabled">
+            <span class="material-icons">person_off</span>
+            Soft delete (inaktiválás)
+          </button>
+          <button class="btn-danger hard" (click)="hardDeleteViewedUser()" [disabled]="authActionBusy">
+            <span class="material-icons">delete_forever</span>
+            Hard delete (végleges törlés)
+          </button>
+        </div>
+      </div>
+    }
+
+    <!-- Admin-only profile details -->
     @if (canEditMemberDetails) {
       <div class="admin-details-panel">
         <h3 class="panel-title">
           <span class="material-icons">admin_panel_settings</span>
-          Admin adatok
+          Profil adatok (member details)
         </h3>
 
         @if (profileSaveMsg) {

@@ -19,6 +19,7 @@ export class MemberListComponent implements OnInit {
   isMembershipAdmin = false;
   isAnyAdmin = false;
   currentUserId: string | null = null;
+  memberActionBusyId: string | null = null;
 
   // Demo members matching the Stitch design
   demoMembers: (Profile & { status: string })[] = [
@@ -79,9 +80,56 @@ export class MemberListComponent implements OnInit {
 
   async deleteMember(member: Profile & { status: string }, event: MouseEvent) {
     event.stopPropagation();
-    if (!confirm(`Biztosan törlöd ezt a tagot: ${member.full_name}?`)) return;
-    await this.supabase.deleteProfile(member.id);
+    if (!this.isFullAdmin) return;
+    const confirmation = prompt(`Végleges törlés: ${member.full_name}\nÍrd be: TORLES`);
+    if (confirmation !== 'TORLES') return;
+
+    this.memberActionBusyId = member.id;
+    const { error } = await this.supabase.hardDeleteUser(member.id);
+    this.memberActionBusyId = null;
+    if (error) {
+      alert(error.message || 'Nem sikerült a végleges törlés.');
+      return;
+    }
+
     this.members = this.members.filter(m => m.id !== member.id);
+  }
+
+  async softDeleteMember(member: Profile & { status: string }, event: MouseEvent) {
+    event.stopPropagation();
+    if (!this.isFullAdmin) return;
+    if (!confirm(`Biztosan inaktiválod ezt a felhasználót: ${member.full_name}?`)) return;
+
+    this.memberActionBusyId = member.id;
+    const { error } = await this.supabase.softDeleteUser(member.id, 'Admin inaktiválás a taglistáról');
+    this.memberActionBusyId = null;
+
+    if (error) {
+      alert(error.message || 'Nem sikerült az inaktiválás.');
+      return;
+    }
+
+    this.members = this.members.map(m => m.id === member.id ? { ...m, is_disabled: true } : m);
+  }
+
+  async sendResetEmail(member: Profile & { status: string }, event: MouseEvent) {
+    event.stopPropagation();
+    if (!this.isFullAdmin) return;
+    if (!member.email) {
+      alert('Ehhez a taghoz nincs email cím mentve.');
+      return;
+    }
+
+    this.memberActionBusyId = member.id;
+    const { error } = await this.supabase.requestPasswordReset(member.email);
+    this.memberActionBusyId = null;
+
+    if (error) {
+      alert(error.message || 'Nem sikerült reset emailt küldeni.');
+      return;
+    }
+
+    alert(`Jelszó-visszaállító email elküldve: ${member.email}`);
   }
 
   getAdminRoleLabel(member: Profile): string {

@@ -14,12 +14,15 @@ export type AdminRole = 'full_admin' | 'membership_admin' | 'tag_admin' | null;
 export interface Profile {
   id: string;
   full_name: string;
+  email?: string | null;
   avatar_url: string;
   belt_rank: string | null;
   qr_code_id: string;
   is_admin: boolean;
   admin_role: AdminRole;
   birth_date: string | null;
+  is_disabled?: boolean;
+  deleted_at?: string | null;
   // Admin-only fields:
   medical_validity: string | null;   // Sportorvosi érvényesség
   membership_fee_paid: boolean;      // Éves tagsági díj
@@ -72,8 +75,10 @@ export class SupabaseService {
   // Reactive auth state
   private _currentUser$ = new BehaviorSubject<any>(null);
   private _currentProfile$ = new BehaviorSubject<Profile | null>(null);
+  private _isPasswordRecoveryFlow$ = new BehaviorSubject<boolean>(false);
   readonly currentUser$ = this._currentUser$.asObservable();
   readonly currentProfile$ = this._currentProfile$.asObservable();
+  readonly isPasswordRecoveryFlow$ = this._isPasswordRecoveryFlow$.asObservable();
 
   private getAuthRedirectUrl(path = '/'): string {
     const fallbackBase = environment.appUrl || 'https://dhkse.netlify.app';
@@ -107,8 +112,9 @@ export class SupabaseService {
       );
 
       // Restore session and listen for auth changes
-      this.supabase.auth.onAuthStateChange(async (_event, session) => {
+      this.supabase.auth.onAuthStateChange(async (event, session) => {
         this.zone.run(async () => {
+          this._isPasswordRecoveryFlow$.next(event === 'PASSWORD_RECOVERY');
           this._currentUser$.next(session?.user ?? null);
           if (session?.user) {
             const profile = await this.getProfile(session.user.id);
@@ -119,6 +125,10 @@ export class SupabaseService {
         });
       });
     }
+  }
+
+  isPasswordRecoveryFlow(): boolean {
+    return this._isPasswordRecoveryFlow$.value;
   }
 
   get client() {
@@ -146,8 +156,13 @@ export class SupabaseService {
   requestPasswordReset(email: string) {
     if (this.isMockMode) return Promise.resolve({ data: null, error: null } as any);
     return this.supabase!.auth.resetPasswordForEmail(email, {
-      redirectTo: this.getAuthRedirectUrl('/login'),
+      redirectTo: this.getAuthRedirectUrl('/reset-password'),
     });
+  }
+
+  updatePassword(newPassword: string) {
+    if (this.isMockMode) return Promise.resolve({ data: null, error: null } as any);
+    return this.supabase!.auth.updateUser({ password: newPassword });
   }
 
   async signOut() {
@@ -449,6 +464,38 @@ export class SupabaseService {
   async deleteProfile(userId: string) {
     if (this.isMockMode) return { error: null };
     return this.supabase!.from('profiles').delete().eq('id', userId);
+  }
+
+  async updateUserEmailAdmin(userId: string, newEmail: string) {
+    if (this.isMockMode) return { error: null };
+    const { data, error } = await this.supabase!.rpc('update_user_email_admin', {
+      p_target_user_id: userId,
+      p_new_email: newEmail,
+    });
+    if (error) return { error: { message: error.message } };
+    if (data?.error) return { error: { message: data.error } };
+    return { error: null, data };
+  }
+
+  async hardDeleteUser(userId: string) {
+    if (this.isMockMode) return { error: null };
+    const { data, error } = await this.supabase!.rpc('admin_hard_delete_user', {
+      p_target_user_id: userId,
+    });
+    if (error) return { error: { message: error.message } };
+    if (data?.error) return { error: { message: data.error } };
+    return { error: null, data };
+  }
+
+  async softDeleteUser(userId: string, reason?: string) {
+    if (this.isMockMode) return { error: null };
+    const { data, error } = await this.supabase!.rpc('admin_soft_delete_user', {
+      p_target_user_id: userId,
+      p_reason: reason ?? null,
+    });
+    if (error) return { error: { message: error.message } };
+    if (data?.error) return { error: { message: data.error } };
+    return { error: null, data };
   }
 
   // Belt exams
