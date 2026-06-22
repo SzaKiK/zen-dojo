@@ -1,0 +1,19 @@
+Backup timestamp: 20260622-082829
+Project: zen-dojo
+
+[Application values]
+production=false
+appUrl=https://dhkse.netlify.app
+supabaseUrl=https://gcawwfiqfnuiwaylxskg.supabase.co
+supabaseAnonKey=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImdjYXd3ZmlxZm51aXdheWx4c2tnIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzUxNTQ1ODksImV4cCI6MjA5MDczMDU4OX0.xX5fPLWwoVdAYfTgoXeQmNTweaRY6wcQRpuJEXVkFLQ
+
+[Netlify build values]
+build.command=npm run build
+build.publish=dist/zen-dojo/browser
+redirect.all.to=/index.html
+redirect.all.status=200
+
+[Source files]
+environmentFile=src/environments/environment.ts
+netlifyToml=netlify.toml
+migrationsDir=supabase/migrations

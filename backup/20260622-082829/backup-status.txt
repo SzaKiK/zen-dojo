@@ -1,0 +1,20 @@
+Backup status created: 2026-06-22 08:28:29
+
+Completed:
+1) Saved old app and hosting values to old-values-backup.txt
+2) Saved migration inventory to supabase-migrations-list.txt
+3) Generated schema bundle from repository migrations to supabase-schema-from-migrations.sql
+
+Attempted but failed:
+- Remote live schema dump to supabase-public-schema-live.sql
+- Reason: Docker Desktop was not available on this machine, and Supabase CLI db dump depends on Docker image execution.
+
+How to complete live Supabase backup after installing Docker Desktop:
+1) Open terminal in repository root
+2) Run:
+   supabase db dump --linked --schema public --file "backup/20260622-082829/supabase-public-schema-live.sql"
+3) Optional data-only dump:
+   supabase db dump --linked --data-only --schema public --file "backup/20260622-082829/supabase-public-data-live.sql"
+
+Alternative without Docker:
+- Install PostgreSQL client tools (pg_dump) and run pg_dump using the Supabase database connection string from project settings.
