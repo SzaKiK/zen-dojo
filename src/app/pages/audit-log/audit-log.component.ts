@@ -141,7 +141,7 @@ export class AuditLogComponent implements OnInit {
     const months: MonthStat[] = [];
     for (let i = 0; i < 12; i++) {
       const d = new Date(now.getFullYear(), now.getMonth() - i, 1);
-      const key = d.toISOString().slice(0, 10);
+      const key = this.monthKey(d);
       const label = `${d.getFullYear()}. ${HU_MONTHS[d.getMonth()]}`;
       months.push({ key, label, count: creationByMonth.get(key) ?? 0, pct: 0 });
     }
@@ -361,6 +361,12 @@ export class AuditLogComponent implements OnInit {
   }
 
   // ── Helpers ──────────────────────────────────────────────────────────
+
+  private monthKey(date: Date): string {
+    const year = date.getFullYear();
+    const month = String(date.getMonth() + 1).padStart(2, '0');
+    return `${year}-${month}-01`;
+  }
 
   fmtDate(value: string): string {
     if (!value) return '';
