@@ -7,6 +7,7 @@ import { SupabaseService } from '../../services/supabase.service';
 
 const HU_MONTHS = ['jan.','feb.','már.','ápr.','máj.','jún.','júl.','aug.','szept.','okt.','nov.','dec.'];
 
+
 interface AuditLogRow {
   id: string;
   created_at: string;
@@ -28,6 +29,11 @@ interface PivotRow {
   total: number;
 }
 
+interface AdminTypeRow {
+  adminName: string;
+  counts: number[]; // one slot per membership type column
+  total: number;
+}
 @Component({
   selector: 'app-audit-log',
   standalone: true,
@@ -60,6 +66,12 @@ export class AuditLogComponent implements OnInit {
   pivotMonthLabels: string[] = [];
   pivotMonthKeys: string[] = [];
   pivotRows: PivotRow[] = [];
+  // Admin × type pivot
+  membershipTypeKeys: string[] = [];
+  adminTypeRows: AdminTypeRow[] = [];
+  // Admin × type pivot date filters
+  adminTypeDateFrom = '';
+  adminTypeDateTo = '';
 
   // Logs tab
   logFilter: 'all' | 'membership_created' | 'membership_updated' | 'membership_deleted' | 'attendance_recorded' | 'role_changed' = 'all';
@@ -71,6 +83,8 @@ export class AuditLogComponent implements OnInit {
   // Export state
   exporting: 'members' | 'memberships' | 'audit' | 'summary' | null = null;
   exportError = '';
+  // expose Math to template for min/max calculations
+  Math = Math;
 
   constructor(private supabase: SupabaseService) {}
 
@@ -104,7 +118,7 @@ export class AuditLogComponent implements OnInit {
 
   // ── Stats computation ────────────────────────────────────────────────
 
-  private computeStats() {
+  computeStats() {
     // When a membership is deleted, PostgreSQL's ON DELETE SET NULL cascade
     // NULLs out target_membership_id on the corresponding create log.
     // So: create events with target_membership_id = null belong to deleted memberships.
@@ -174,6 +188,10 @@ export class AuditLogComponent implements OnInit {
     this.pivotMonthKeys   = months.map(m => m.key);
     this.pivotMonthLabels = months.map(m => m.label);
 
+    // Default Admin×Type date filters to cover the whole last 12 months
+    if (!this.adminTypeDateFrom) this.adminTypeDateFrom = this.pivotMonthKeys[this.pivotMonthKeys.length - 1] ?? '';
+    if (!this.adminTypeDateTo) this.adminTypeDateTo = new Date().toISOString().slice(0, 10);
+
     const pivotMap = new Map<string, number[]>(); // admin → count per month slot
     for (const log of this.logs) {
       if (log.action_type !== 'membership_created') continue;
@@ -187,6 +205,32 @@ export class AuditLogComponent implements OnInit {
     }
     this.pivotRows = Array.from(pivotMap.entries())
       .map(([adminName, months]) => ({ adminName, months, total: months.reduce((s, v) => s + v, 0) }))
+      .sort((a, b) => b.total - a.total);
+
+    // ── Admin × Type pivot (counts) — who sold how many of each type
+    // Determine date range from inputs, defaulting to last-12-months values set above
+    const from = this.adminTypeDateFrom ? (this.adminTypeDateFrom + 'T00:00:00') : undefined;
+    const to = this.adminTypeDateTo ? (this.adminTypeDateTo + 'T23:59:59') : undefined;
+    const adminTypeMap = new Map<string, Map<string, number>>();
+    const membershipTypesInRange = new Set<string>();
+    for (const log of this.logs) {
+      if (log.action_type !== 'membership_created') continue;
+      if (!log.target_membership_id) continue;
+      if (from && log.created_at < from) continue;
+      if (to && log.created_at > to) continue;
+      const adminName = log.profiles?.full_name ?? 'Ismeretlen';
+      const mtype = log.membership_type ?? '';
+      membershipTypesInRange.add(mtype);
+      if (!adminTypeMap.has(adminName)) adminTypeMap.set(adminName, new Map());
+      const tmap = adminTypeMap.get(adminName)!;
+      tmap.set(mtype, (tmap.get(mtype) ?? 0) + 1);
+    }
+    this.membershipTypeKeys = Array.from(membershipTypesInRange).sort();
+    this.adminTypeRows = Array.from(adminTypeMap.entries())
+      .map(([adminName, tmap]) => {
+        const counts = this.membershipTypeKeys.map(k => tmap.get(k) ?? 0);
+        return { adminName, counts, total: counts.reduce((s, v) => s + v, 0) };
+      })
       .sort((a, b) => b.total - a.total);
   }
 
@@ -278,7 +322,45 @@ export class AuditLogComponent implements OnInit {
 
       this.downloadExcel([
         { name: 'Admin pivot', rows: pivotSheetRows },
+        // Admin × Type pivot
+        { name: 'Admin by Type', rows: (() => {
+          const rows: any[] = [];
+          const header: any = { 'Admin': 'Admin' };
+          for (const t of this.membershipTypeKeys) header[this.membershipTypeLabel(t)] = this.membershipTypeLabel(t);
+          header['Összesen'] = 'Összesen';
+          rows.push(header);
+          for (const r of this.adminTypeRows) {
+            const row: any = { 'Admin': r.adminName };
+            for (let i = 0; i < this.membershipTypeKeys.length; i++) row[this.membershipTypeLabel(this.membershipTypeKeys[i])] = r.counts[i] || 0;
+            row['Összesen'] = r.total;
+            rows.push(row);
+          }
+          return rows;
+        })() },
       ], 'dhkse_havi_osszesito');
+    } catch (e: any) {
+      this.exportError = e?.message ?? 'Export hiba';
+    } finally {
+      this.exporting = null;
+    }
+  }
+
+  // Export only Admin × Type pivot as a single sheet
+  async exportAdminByType() {
+    this.exporting = 'summary';
+    try {
+      const rows: any[] = [];
+      const header: any = { 'Admin': 'Admin' };
+      for (const t of this.membershipTypeKeys) header[this.membershipTypeLabel(t)] = this.membershipTypeLabel(t);
+      header['Összesen'] = 'Összesen';
+      rows.push(header);
+      for (const r of this.adminTypeRows) {
+        const row: any = { 'Admin': r.adminName };
+        for (let i = 0; i < this.membershipTypeKeys.length; i++) row[this.membershipTypeLabel(this.membershipTypeKeys[i])] = r.counts[i] || 0;
+        row['Összesen'] = r.total;
+        rows.push(row);
+      }
+      this.downloadExcel([{ name: 'Admin típus szerint', rows }], 'dhkse_admin_by_type');
     } catch (e: any) {
       this.exportError = e?.message ?? 'Export hiba';
     } finally {
@@ -343,6 +425,21 @@ export class AuditLogComponent implements OnInit {
         { name: 'Bérletek', rows: membershipRows },
         { name: 'Műveleti napló', rows: auditRows },
         { name: 'Admin pivot', rows: pivotSheetRows },
+        // Admin × Type pivot
+        { name: 'Admin by Type', rows: (() => {
+          const rows: any[] = [];
+          const header: any = { 'Admin': 'Admin' };
+          for (const t of this.membershipTypeKeys) header[this.membershipTypeLabel(t)] = this.membershipTypeLabel(t);
+          header['Összesen'] = 'Összesen';
+          rows.push(header);
+          for (const r of this.adminTypeRows) {
+            const row: any = { 'Admin': r.adminName };
+            for (let i = 0; i < this.membershipTypeKeys.length; i++) row[this.membershipTypeLabel(this.membershipTypeKeys[i])] = r.counts[i] || 0;
+            row['Összesen'] = r.total;
+            rows.push(row);
+          }
+          return rows;
+        })() },
       ], 'dhkse_teljes_export');
     } catch (e: any) {
       this.exportError = e?.message ?? 'Export hiba';
@@ -358,6 +455,12 @@ export class AuditLogComponent implements OnInit {
       XLSX.utils.book_append_sheet(wb, ws, s.name);
     }
     XLSX.writeFile(wb, `${filename}_${new Date().toISOString().slice(0,10)}.xlsx`);
+  }
+
+  // Format HUF amounts, e.g. 15000 -> "15 000 Ft"
+  fmtCurrency(value: number): string {
+    if (!value && value !== 0) return '';
+    return value.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ' ') + ' Ft';
   }
 
   // ── Helpers ──────────────────────────────────────────────────────────

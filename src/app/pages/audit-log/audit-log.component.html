@@ -234,6 +234,55 @@
             </table>
           </div>
         }
+        </div>
+
+        <!-- Admin × Type pivot -->
+        <div class="card section-card">
+          <h2 class="section-title">
+            <span class="material-icons">grid_view</span>
+            Admin × típus (ki hány bérletet hozott létre)
+          </h2>
+          <div class="filter-row" style="margin-bottom:8px; display:flex; gap:12px; align-items:center;">
+            <div class="filter-group">
+              <label>Dátumtól</label>
+              <input type="date" [(ngModel)]="adminTypeDateFrom" (change)="computeStats()" />
+            </div>
+            <div class="filter-group">
+              <label>Dátumig</label>
+              <input type="date" [(ngModel)]="adminTypeDateTo" (change)="computeStats()" />
+            </div>
+            <div style="margin-left:auto">
+              <button class="export-btn" (click)="exportAdminByType()">Exportálás (.xlsx)</button>
+            </div>
+          </div>
+          @if (adminTypeRows.length === 0) {
+            <p class="no-data">Nincs elegendő adat.</p>
+          } @else {
+            <div class="pivot-scroll">
+              <table class="pivot-table">
+                <thead>
+                  <tr>
+                    <th class="pivot-admin-col">Admin</th>
+                    @for (t of membershipTypeKeys; track t) {
+                      <th>{{ membershipTypeLabel(t) }}</th>
+                    }
+                    <th class="pivot-total-col">Összes</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  @for (r of adminTypeRows; track r.adminName) {
+                    <tr>
+                      <td class="pivot-admin-col">{{ r.adminName }}</td>
+                      @for (count of r.counts; track $index) {
+                        <td class="pivot-val">{{ count || '–' }}</td>
+                      }
+                      <td class="pivot-total">{{ r.total }}</td>
+                    </tr>
+                  }
+                </tbody>
+              </table>
+            </div>
+          }
       </div>
     }
 
