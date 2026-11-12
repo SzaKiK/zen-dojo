@@ -44,6 +44,14 @@ export class AppComponent implements OnInit, OnDestroy {
     return this.supabase.isFullAdmin(this.currentProfile);
   }
 
+  get canReviewRecordRequests(): boolean {
+    return this.supabase.isTagAdmin(this.currentProfile);
+  }
+
+  get canManageMembershipFees(): boolean {
+    return this.supabase.isTagAdmin(this.currentProfile);
+  }
+
   get dashboardRoute(): string {
     if (this.supabase.isFullAdmin(this.currentProfile)) return '/admin';
     if (this.supabase.isMembershipAdmin(this.currentProfile)) return '/berletek';

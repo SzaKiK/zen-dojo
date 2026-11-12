@@ -25,7 +25,15 @@ export interface Profile {
   deleted_at?: string | null;
   // Admin-only fields:
   medical_validity: string | null;   // Sportorvosi érvényesség
-  membership_fee_paid: boolean;      // Éves tagsági díj
+  membership_fee_paid: boolean;      // Legacy calendar-year field
+}
+
+export interface MembershipFeeSeason {
+  user_id: string;
+  season_start_year: number;
+  paid: boolean;
+  updated_by: string | null;
+  updated_at: string;
 }
 
 export interface BeltExam {
@@ -42,6 +50,24 @@ export interface TrainingCamp {
   camp_date: string;
   description: string;
   created_at: string;
+}
+
+export type MemberRecordRequestType = 'belt_exam' | 'training_camp';
+export type MemberRecordRequestStatus = 'pending' | 'approved' | 'rejected';
+
+export interface MemberRecordRequest {
+  id: string;
+  user_id: string;
+  request_type: MemberRecordRequestType;
+  event_date: string;
+  belt_rank: string | null;
+  description: string;
+  status: MemberRecordRequestStatus;
+  reviewed_by: string | null;
+  reviewed_at: string | null;
+  review_note: string | null;
+  created_at: string;
+  profiles?: { full_name: string } | null;
 }
 
 export interface Membership {
@@ -538,5 +564,67 @@ export class SupabaseService {
   async deleteTrainingCamp(id: string) {
     if (this.isMockMode) return { error: null };
     return this.supabase!.from('training_camps').delete().eq('id', id);
+  }
+
+  async getMemberRecordRequests(userId: string): Promise<MemberRecordRequest[]> {
+    if (this.isMockMode) return [];
+    const { data } = await this.supabase!
+      .from('member_record_requests')
+      .select('*')
+      .eq('user_id', userId)
+      .order('created_at', { ascending: false });
+    return data ?? [];
+  }
+
+  async submitMemberRecordRequest(request: Pick<MemberRecordRequest, 'user_id' | 'request_type' | 'event_date' | 'belt_rank' | 'description'>) {
+    if (this.isMockMode) return { error: null };
+    return this.supabase!.from('member_record_requests').insert(request);
+  }
+
+  async getPendingMemberRecordRequests(): Promise<MemberRecordRequest[]> {
+    if (this.isMockMode) return [];
+    const { data } = await this.supabase!
+      .from('member_record_requests')
+      .select('*, profiles!member_record_requests_user_id_fkey(full_name)')
+      .eq('status', 'pending')
+      .order('created_at', { ascending: true });
+    return data ?? [];
+  }
+
+  async reviewMemberRecordRequest(requestId: string, approve: boolean, reviewNote: string) {
+    if (this.isMockMode) return { error: null };
+    return this.supabase!.rpc('review_member_record_request', {
+      p_request_id: requestId,
+      p_approve: approve,
+      p_review_note: reviewNote || null,
+    });
+  }
+
+  async getMembershipFeeSeasons(userId: string, seasonStartYears: number[]): Promise<MembershipFeeSeason[]> {
+    if (this.isMockMode) return [];
+    const { data } = await this.supabase!
+      .from('membership_fee_seasons')
+      .select('user_id, season_start_year, paid, updated_by, updated_at')
+      .eq('user_id', userId)
+      .in('season_start_year', seasonStartYears);
+    return data ?? [];
+  }
+
+  async getAllMembershipFeeSeasons(seasonStartYears: number[]): Promise<MembershipFeeSeason[]> {
+    if (this.isMockMode) return [];
+    const { data } = await this.supabase!
+      .from('membership_fee_seasons')
+      .select('user_id, season_start_year, paid, updated_by, updated_at')
+      .in('season_start_year', seasonStartYears);
+    return data ?? [];
+  }
+
+  async setMembershipFeeSeason(userId: string, seasonStartYear: number, paid: boolean) {
+    if (this.isMockMode) return { error: null };
+    return this.supabase!.rpc('set_membership_fee_season', {
+      p_user_id: userId,
+      p_season_start_year: seasonStartYear,
+      p_paid: paid,
+    });
   }
 }

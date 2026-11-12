@@ -247,7 +247,7 @@ export class AuditLogComponent implements OnInit {
         'Telefon': p.phone ?? '',
         'Születési dátum': p.birth_date ?? '',
         'Orvosi érvényessége': p.medical_validity ?? '',
-        'Tagdíj fizetve': p.membership_fee_paid ? 'Igen' : 'Nem',
+        'Tagdíj fizetve (régi naptári éves adat)': p.membership_fee_paid ? 'Igen' : 'Nem',
         'Szerepkör': p.admin_role ?? 'tanuló',
         'Regisztrálva': this.fmtDate(p.created_at),
       }));
@@ -384,7 +384,7 @@ export class AuditLogComponent implements OnInit {
         'Telefon': p.phone ?? '',
         'Születési dátum': p.birth_date ?? '',
         'Orvosi érvényessége': p.medical_validity ?? '',
-        'Tagdíj fizetve': p.membership_fee_paid ? 'Igen' : 'Nem',
+        'Tagdíj fizetve (régi naptári éves adat)': p.membership_fee_paid ? 'Igen' : 'Nem',
         'Szerepkör': p.admin_role ?? 'tanuló',
         'Regisztrálva': this.fmtDate(p.created_at),
       }));

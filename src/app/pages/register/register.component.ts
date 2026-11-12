@@ -2,11 +2,12 @@ import { Component } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { Router, RouterLink } from '@angular/router';
 import { SupabaseService } from '../../services/supabase.service';
+import { DateSelectorComponent } from '../../shared/date-selector/date-selector.component';
 
 @Component({
   selector: 'app-register',
   standalone: true,
-  imports: [FormsModule, RouterLink],
+  imports: [FormsModule, RouterLink, DateSelectorComponent],
   templateUrl: './register.component.html',
   styleUrl: './register.component.scss',
 })

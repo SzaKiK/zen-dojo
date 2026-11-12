@@ -1,5 +1,5 @@
 import { Routes } from '@angular/router';
-import { authGuard, adminGuard, fullAdminGuard, anyAdminGuard } from './guards/auth.guard';
+import { authGuard, adminGuard, fullAdminGuard, anyAdminGuard, tagAdminGuard } from './guards/auth.guard';
 
 export const routes: Routes = [
   { path: '', loadComponent: () => import('./pages/welcome/welcome.component').then(m => m.WelcomeComponent) },
@@ -12,6 +12,8 @@ export const routes: Routes = [
   { path: 'admin', canActivate: [fullAdminGuard], loadComponent: () => import('./pages/admin-dashboard/admin-dashboard.component').then(m => m.AdminDashboardComponent) },
   { path: 'audit', canActivate: [fullAdminGuard], loadComponent: () => import('./pages/audit-log/audit-log.component').then(m => m.AuditLogComponent) },
   { path: 'sessions-admin', canActivate: [fullAdminGuard], loadComponent: () => import('./pages/session-manager/session-manager.component').then(m => m.SessionManagerComponent) },
+  { path: 'record-approvals', canActivate: [tagAdminGuard], loadComponent: () => import('./pages/record-approvals/record-approvals.component').then(m => m.RecordApprovalsComponent) },
+  { path: 'membership-fees', canActivate: [tagAdminGuard], loadComponent: () => import('./pages/membership-fees/membership-fees.component').then(m => m.MembershipFeesComponent) },
   { path: 'members', canActivate: [anyAdminGuard], loadComponent: () => import('./pages/member-list/member-list.component').then(m => m.MemberListComponent) },
   { path: 'members/:userId', canActivate: [anyAdminGuard], loadComponent: () => import('./pages/membership-card/membership-card.component').then(m => m.MembershipCardComponent) },
   { path: 'qr-scanner', canActivate: [adminGuard], loadComponent: () => import('./pages/qr-scanner/qr-scanner.component').then(m => m.QrScannerComponent) },

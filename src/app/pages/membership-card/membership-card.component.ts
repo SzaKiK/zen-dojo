@@ -2,13 +2,14 @@ import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { Router, RouterLink, ActivatedRoute } from '@angular/router';
 import { FormsModule } from '@angular/forms';
-import { SupabaseService, Profile, Membership, BeltExam, TrainingCamp, BELT_RANKS } from '../../services/supabase.service';
+import { SupabaseService, Profile, Membership, BeltExam, TrainingCamp, MemberRecordRequest, MemberRecordRequestType, MembershipFeeSeason, BELT_RANKS } from '../../services/supabase.service';
+import { DateSelectorComponent } from '../../shared/date-selector/date-selector.component';
 import QRCode from 'qrcode';
 
 @Component({
   selector: 'app-membership-card',
   standalone: true,
-  imports: [CommonModule, RouterLink, FormsModule],
+  imports: [CommonModule, RouterLink, FormsModule, DateSelectorComponent],
   templateUrl: './membership-card.component.html',
   styleUrl: './membership-card.component.scss',
 })
@@ -29,14 +30,28 @@ export class MembershipCardComponent implements OnInit {
   // Admin-only member details
   beltExams: BeltExam[] = [];
   trainingCamps: TrainingCamp[] = [];
+  membershipFeeSeasons: MembershipFeeSeason[] = [];
+  memberRecordRequests: MemberRecordRequest[] = [];
   readonly beltRanks = BELT_RANKS;
+
+  newRecordRequestType: MemberRecordRequestType = 'belt_exam';
+  newRecordDate: string | null = null;
+  newRecordBeltRank = '9.kyu';
+  newRecordDescription = '';
+  submittingRecordRequest = false;
+  recordRequestMessage = '';
+  recordRequestError = false;
 
   // Admin edit state
   savingProfile = false;
   profileSaveMsg = '';
+  editBirthDate: string | null = null;
+  savingBirthDate = false;
+  birthDateSaveMsg = '';
+  birthDateSaveError = false;
   editBeltRank = '';
   editMedicalValidity = '';
-  editMembershipFeePaid = false;
+  savingMembershipFeeYear: number | null = null;
 
   // Full-admin auth account actions (only when viewing another member)
   authEditEmail = '';
@@ -116,6 +131,10 @@ export class MembershipCardComponent implements OnInit {
       }
 
       if (this.profile) {
+        this.editBirthDate = this.profile.birth_date;
+        if (this.profile.id === this.currentUserId) {
+          this.memberRecordRequests = await this.supabase.getMemberRecordRequests(this.profile.id);
+        }
         [this.membership, this.membershipHistory] = await Promise.all([
           this.supabase.getMembership(this.profile.id),
           this.supabase.getMembershipHistory(this.profile.id),
@@ -132,13 +151,13 @@ export class MembershipCardComponent implements OnInit {
 
         // Load admin-only data when admin is viewing
         if (this.canEditMemberDetails) {
-          [this.beltExams, this.trainingCamps] = await Promise.all([
+          [this.beltExams, this.trainingCamps, this.membershipFeeSeasons] = await Promise.all([
             this.supabase.getBeltExams(this.profile.id),
             this.supabase.getTrainingCamps(this.profile.id),
+            this.supabase.getMembershipFeeSeasons(this.profile.id, this.visibleMembershipFeeSeasons.map(season => season.startYear)),
           ]);
           this.editBeltRank = this.profile.belt_rank ?? '';
           this.editMedicalValidity = this.profile.medical_validity ?? '';
-          this.editMembershipFeePaid = this.profile.membership_fee_paid ?? false;
         }
 
         this.authEditEmail = this.profile.email ?? '';
@@ -337,14 +356,68 @@ export class MembershipCardComponent implements OnInit {
     const { error } = await this.supabase.updateProfile(this.profile.id, {
       belt_rank: this.editBeltRank || null,
       medical_validity: this.editMedicalValidity || null,
-      membership_fee_paid: this.editMembershipFeePaid,
     });
     this.savingProfile = false;
     if (!error) {
-      this.profile = { ...this.profile, belt_rank: this.editBeltRank || null, medical_validity: this.editMedicalValidity || null, membership_fee_paid: this.editMembershipFeePaid };
+      this.profile = { ...this.profile, belt_rank: this.editBeltRank || null, medical_validity: this.editMedicalValidity || null };
       this.profileSaveMsg = 'Mentve!';
       setTimeout(() => (this.profileSaveMsg = ''), 2500);
     }
+  }
+
+  async saveBirthDate() {
+    if (!this.profile) return;
+    const canEdit = this.isViewingOther
+      ? this.canEditMemberDetails
+      : this.profile.id === this.currentUserId;
+    if (!canEdit) return;
+
+    this.savingBirthDate = true;
+    this.birthDateSaveMsg = '';
+    const { error } = await this.supabase.updateProfile(this.profile.id, { birth_date: this.editBirthDate });
+    this.savingBirthDate = false;
+    this.birthDateSaveError = !!error;
+    this.birthDateSaveMsg = error ? 'A születési dátum mentése nem sikerült.' : 'Születési dátum mentve.';
+    if (!error) this.profile = { ...this.profile, birth_date: this.editBirthDate };
+  }
+
+  async toggleMembershipFeeSeason(seasonStartYear: number) {
+    if (!this.profile || !this.canEditMemberDetails || this.savingMembershipFeeYear !== null) return;
+    const paid = !this.isMembershipFeePaid(seasonStartYear);
+    this.savingMembershipFeeYear = seasonStartYear;
+    const { error } = await this.supabase.setMembershipFeeSeason(this.profile.id, seasonStartYear, paid);
+    this.savingMembershipFeeYear = null;
+    if (error) {
+      this.profileSaveMsg = 'A tagdíj státusz mentése nem sikerült.';
+      return;
+    }
+
+    const existing = this.membershipFeeSeasons.find(season => season.season_start_year === seasonStartYear);
+    if (existing) {
+      existing.paid = paid;
+    } else {
+      this.membershipFeeSeasons = [...this.membershipFeeSeasons, {
+        user_id: this.profile.id,
+        season_start_year: seasonStartYear,
+        paid,
+        updated_by: this.currentUserId,
+        updated_at: new Date().toISOString(),
+      }];
+    }
+    this.profileSaveMsg = `${this.seasonLabel(seasonStartYear)} tagdíj mentve.`;
+    setTimeout(() => (this.profileSaveMsg = ''), 2500);
+  }
+
+  isMembershipFeePaid(seasonStartYear: number): boolean {
+    const savedSeason = this.membershipFeeSeasons.find(season => season.season_start_year === seasonStartYear);
+    if (savedSeason) return savedSeason.paid;
+
+    const currentSeason = this.visibleMembershipFeeSeasons.find(season => season.current);
+    return seasonStartYear === currentSeason?.startYear && !!this.profile?.membership_fee_paid;
+  }
+
+  seasonLabel(startYear: number): string {
+    return `${startYear}/${startYear + 1}`;
   }
 
   // ── Belt exams ────────────────────────────────────────────────────
@@ -375,6 +448,35 @@ export class MembershipCardComponent implements OnInit {
     this.addingCamp = false;
   }
 
+  async submitMemberRecordRequest() {
+    if (!this.profile || this.profile.id !== this.currentUserId || !this.newRecordDate) return;
+    this.submittingRecordRequest = true;
+    this.recordRequestMessage = '';
+    const { error } = await this.supabase.submitMemberRecordRequest({
+      user_id: this.profile.id,
+      request_type: this.newRecordRequestType,
+      event_date: this.newRecordDate,
+      belt_rank: this.newRecordRequestType === 'belt_exam' ? this.newRecordBeltRank : null,
+      description: this.newRecordRequestType === 'training_camp' ? this.newRecordDescription.trim() : '',
+    });
+    this.submittingRecordRequest = false;
+    this.recordRequestError = !!error;
+    this.recordRequestMessage = error ? 'A beküldés nem sikerült. Próbáld újra.' : 'Beküldve, admin jóváhagyásra vár.';
+    if (!error) {
+      this.newRecordDate = null;
+      this.newRecordDescription = '';
+      this.memberRecordRequests = await this.supabase.getMemberRecordRequests(this.profile.id);
+    }
+  }
+
+  recordRequestTypeLabel(type: MemberRecordRequestType): string {
+    return type === 'belt_exam' ? 'Övvizsga' : 'Edzőtábor';
+  }
+
+  recordRequestStatusLabel(status: MemberRecordRequest['status']): string {
+    return status === 'pending' ? 'Jóváhagyásra vár' : status === 'approved' ? 'Jóváhagyva' : 'Elutasítva';
+  }
+
   async deleteTrainingCamp(id: string) {
     await this.supabase.deleteTrainingCamp(id);
     this.trainingCamps = this.trainingCamps.filter(c => c.id !== id);
@@ -396,8 +498,13 @@ export class MembershipCardComponent implements OnInit {
     return new Date(d).getTime() < Date.now();
   }
 
-  get currentYear(): number {
-    return new Date().getFullYear();
+  get visibleMembershipFeeSeasons(): { startYear: number; label: string; current: boolean }[] {
+    const now = new Date();
+    const currentSeasonStart = now.getMonth() >= 8 ? now.getFullYear() : now.getFullYear() - 1;
+    return [-1, 0, 1].map(offset => {
+      const startYear = currentSeasonStart + offset;
+      return { startYear, label: this.seasonLabel(startYear), current: offset === 0 };
+    });
   }
 
   get sessionsUsed(): number {

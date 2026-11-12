@@ -36,12 +36,7 @@
 
       <div class="form-group">
         <label for="birthDate">Születési dátum</label>
-        <input
-          type="date"
-          id="birthDate"
-          [(ngModel)]="birthDate"
-          name="birthDate"
-        />
+        <app-date-selector id="birthDate" [(ngModel)]="birthDate" name="birthDate" />
       </div>
 
       <div class="form-group">

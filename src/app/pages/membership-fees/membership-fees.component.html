@@ -1,0 +1,93 @@
+<main class="fees-page">
+  <header class="page-header">
+    <a routerLink="/members" class="back-btn" aria-label="Vissza a tagokhoz">
+      <span class="material-icons">arrow_back</span>
+    </a>
+    <div class="title-block">
+      <h1>Tagsági díjak</h1>
+      <p>Szezononkénti befizetések áttekintése</p>
+    </div>
+    <button type="button" class="export-btn" (click)="exportSeasonsToExcel()" [disabled]="loading || exporting || members.length === 0" title="Összes szezon exportálása Excelbe">
+      <span class="material-icons">download</span>
+      <span>{{ exporting ? 'Exportálás...' : 'Excel export' }}</span>
+    </button>
+  </header>
+
+  @if (errorMessage) {
+    <p class="error-message" role="alert">{{ errorMessage }}</p>
+  }
+
+  <section class="season-overview" aria-label="Szezon kiválasztása">
+    @for (season of seasons; track season.startYear) {
+      <button type="button" class="season-option" [class.active]="selectedSeasonStartYear === season.startYear" [class.current]="season.current" (click)="selectSeason(season)">
+        <span class="season-heading">
+          <strong>{{ season.label }}</strong>
+          @if (season.current) { <span class="current-badge">Aktuális</span> }
+        </span>
+        @if (loading) {
+          <span class="season-metric">Betöltés...</span>
+        } @else {
+          <span class="season-metric">{{ paidCountForSeason(season.startYear) }} / {{ members.length }} fizetve</span>
+        }
+      </button>
+    }
+  </section>
+
+  @if (loading) {
+    <p class="loading-state">Adatok betöltése...</p>
+  } @else {
+    <section class="season-summary" aria-label="Szezon statisztikák">
+      <div class="summary-heading">
+        <div>
+          <span class="eyebrow">Kiválasztott szezon</span>
+          <h2>{{ selectedSeason.label }} @if (selectedSeason.current) { <span>· Aktuális</span> }</h2>
+        </div>
+        <span class="coverage">{{ paidPercent }}% befizetve</span>
+      </div>
+      <div class="progress-track" role="progressbar" [attr.aria-valuenow]="paidPercent" aria-valuemin="0" aria-valuemax="100">
+        <span [style.width.%]="paidPercent"></span>
+      </div>
+      <div class="summary-counts">
+        <div><strong>{{ paidCount }}</strong><span>Fizetve</span></div>
+        <div><strong>{{ unpaidCount }}</strong><span>Nem fizetve</span></div>
+        <div><strong>{{ members.length }}</strong><span>Összes tag</span></div>
+      </div>
+    </section>
+
+    <section class="member-list">
+      <div class="list-header">
+        <h2>Tagok befizetései</h2>
+        <label class="search-box">
+          <span class="material-icons">search</span>
+          <input type="search" [(ngModel)]="searchText" placeholder="Keresés név vagy fokozat szerint" />
+        </label>
+      </div>
+
+      <div class="status-filters" aria-label="Befizetési státusz szűrése">
+        <button type="button" [class.active]="paymentFilter === 'all'" (click)="paymentFilter = 'all'">Összes <span>{{ members.length }}</span></button>
+        <button type="button" [class.active]="paymentFilter === 'paid'" (click)="paymentFilter = 'paid'">Fizetve <span>{{ paidCount }}</span></button>
+        <button type="button" [class.active]="paymentFilter === 'unpaid'" (click)="paymentFilter = 'unpaid'">Nem fizetve <span>{{ unpaidCount }}</span></button>
+      </div>
+
+      <div class="member-table" role="table" [attr.aria-label]="selectedSeason.label + ' tagdíj státuszok'">
+        <div class="member-row table-heading" role="row">
+          <span role="columnheader">Tag</span>
+          <span role="columnheader">Övfokozat</span>
+          <span role="columnheader">Befizetés</span>
+        </div>
+        @for (member of filteredMembers; track member.id) {
+          <div class="member-row" role="row">
+            <span class="member-name" role="cell">{{ member.full_name }} @if (member.is_disabled) { <small>Inaktív</small> }</span>
+            <span class="belt-rank" role="cell">{{ member.belt_rank || '—' }}</span>
+            <span class="payment-status" [class.paid]="member.paidBySeason[selectedSeasonStartYear]" [class.unpaid]="!member.paidBySeason[selectedSeasonStartYear]" role="cell">
+              <span class="status-dot"></span>
+              {{ member.paidBySeason[selectedSeasonStartYear] ? 'Fizetve' : 'Nem fizetve' }}
+            </span>
+          </div>
+        } @empty {
+          <p class="empty-state">Nincs a szűrésnek megfelelő tag.</p>
+        }
+      </div>
+    </section>
+  }
+</main>

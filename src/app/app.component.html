@@ -5,6 +5,16 @@
   </a>
   <div class="topnav-right">
     @if (isLoggedIn) {
+      @if (canReviewRecordRequests) {
+        <a routerLink="/record-approvals" class="topnav-btn" title="Adatbeküldések jóváhagyása" aria-label="Adatbeküldések jóváhagyása">
+          <span class="material-icons">fact_check</span>
+        </a>
+      }
+      @if (canManageMembershipFees) {
+        <a routerLink="/membership-fees" class="topnav-btn" title="Tagdíj szezonok" aria-label="Tagdíj szezonok">
+          <span class="material-icons">payments</span>
+        </a>
+      }
       <a [routerLink]="dashboardRoute" class="topnav-user" title="Profil">
         <span class="material-icons">person</span>
         <span class="user-name">{{ currentProfile?.full_name }}</span>

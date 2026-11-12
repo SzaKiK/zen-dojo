@@ -899,6 +899,108 @@
   }
 }
 
+.birthday-panel {
+  margin: 24px 0 96px;
+  padding: 14px;
+  opacity: 0.88;
+
+  .panel-title {
+    font-size: 13px;
+  }
+}
+
+.season-fee-list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding-top: 4px;
+
+  h4 { font-size: 13px; color: var(--text-sub); }
+
+  .fee-season-row {
+    padding: 8px 10px;
+    border: 1px solid transparent;
+    border-radius: 8px;
+
+    &.current-season {
+      background: rgba(34, 128, 74, 0.1);
+      border-color: rgba(34, 128, 74, 0.55);
+    }
+  }
+
+  .current-season-badge {
+    display: inline-block;
+    margin-left: 8px;
+    color: #14804a;
+    font-size: 10px;
+    font-weight: 700;
+    white-space: nowrap;
+  }
+}
+
+.member-record-requests {
+  margin: 20px 16px 0;
+  padding: 18px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  background: var(--surface-deep);
+  border: 1px solid var(--border-sub);
+  border-radius: 12px;
+
+  h3 { font-size: 15px; }
+  label { font-size: 12px; color: var(--text-muted); }
+  select, input {
+    width: 100%;
+    min-height: 42px;
+    padding: 8px 10px;
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    background: var(--bg);
+    color: var(--text);
+    font: 13px 'Lexend', sans-serif;
+  }
+
+  .request-hint { font-size: 12px; color: var(--text-muted); line-height: 1.5; }
+  .request-message { font-size: 13px; color: #22c55e; }
+  .request-message.error { color: #ef4444; }
+
+  .submit-record-request {
+    min-height: 42px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    border: 0;
+    border-radius: 8px;
+    background: #4a6cf7;
+    color: #fff;
+    font-size: 13px;
+    font-weight: 600;
+    &:disabled { opacity: 0.55; cursor: not-allowed; }
+    .material-icons { font-size: 18px; }
+  }
+
+  .member-request-history {
+    margin-top: 8px;
+    border-top: 1px solid var(--border-sub);
+    padding-top: 12px;
+    h4 { margin-bottom: 8px; font-size: 13px; }
+    .member-request-row {
+      display: grid;
+      gap: 4px;
+      padding: 8px 0;
+      border-bottom: 1px solid var(--border-light);
+      font-size: 12px;
+      color: var(--text-sub);
+      strong { font-size: 11px; color: #22c55e; }
+      strong.pending { color: #f59e0b; }
+      strong.rejected { color: #ef4444; }
+      small { color: var(--text-muted); }
+    }
+  }
+}
+
 .auth-account-panel {
   border-color: rgba(74, 108, 247, 0.28);
 }

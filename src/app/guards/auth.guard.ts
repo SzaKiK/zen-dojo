@@ -70,3 +70,17 @@ export const anyAdminGuard = async () => {
   if (supabase.isAnyAdmin(profile)) return true;
   return router.createUrlTree(['/membership-card']);
 };
+
+export const tagAdminGuard = async () => {
+  const supabase = inject(SupabaseService);
+  const router = inject(Router);
+  const { data } = await supabase.getSession();
+  if (!data?.session) return router.createUrlTree(['/login']);
+  const profile = await waitForProfile(supabase);
+  if (profile?.is_disabled) {
+    await supabase.signOut();
+    return router.createUrlTree(['/login']);
+  }
+  if (supabase.isTagAdmin(profile)) return true;
+  return router.createUrlTree(['/membership-card']);
+};

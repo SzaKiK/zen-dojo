@@ -227,14 +227,6 @@
           </div>
         }
 
-        <!-- Birth date (read-only here, set at registration) -->
-        @if (profile?.birth_date) {
-          <div class="detail-row">
-            <span class="detail-label">Születési dátum</span>
-            <span class="detail-value">{{ formatDate(profile?.birth_date) }}</span>
-          </div>
-        }
-
         <!-- Öv fokozat (belt rank kyu/dan) -->
         <div class="detail-field">
           <label>Öv fokozat</label>
@@ -261,13 +253,28 @@
           }
         </div>
 
-        <!-- Éves tagsági díj -->
-        <div class="detail-field checkbox-row">
-          <span class="fee-label">Éves tagsági díj fizetve ({{ currentYear }})</span>
-          <button type="button" class="toggle-pill" [class.paid]="editMembershipFeePaid" (click)="editMembershipFeePaid = !editMembershipFeePaid">
-            <span class="material-icons">{{ editMembershipFeePaid ? 'check_circle' : 'cancel' }}</span>
-            {{ editMembershipFeePaid ? 'Fizetve' : 'Nem fizetve' }}
-          </button>
+        <div class="season-fee-list">
+          <h4>Tagsági díj szezononként</h4>
+          @for (season of visibleMembershipFeeSeasons; track season.startYear) {
+            <div class="detail-field checkbox-row fee-season-row" [class.current-season]="season.current">
+              <span class="fee-label">
+                {{ season.label }}
+                @if (season.current) {
+                  <span class="current-season-badge">Aktuális</span>
+                }
+              </span>
+              <button
+                type="button"
+                class="toggle-pill"
+                [class.paid]="isMembershipFeePaid(season.startYear)"
+                [disabled]="savingMembershipFeeYear !== null"
+                (click)="toggleMembershipFeeSeason(season.startYear)"
+              >
+                <span class="material-icons">{{ isMembershipFeePaid(season.startYear) ? 'check_circle' : 'cancel' }}</span>
+                {{ savingMembershipFeeYear === season.startYear ? 'Mentés...' : isMembershipFeePaid(season.startYear) ? 'Fizetve' : 'Nem fizetve' }}
+              </button>
+            </div>
+          }
         </div>
 
         <button class="btn-save-admin" (click)="saveAdminProfileFields()" [disabled]="savingProfile">
@@ -358,6 +365,78 @@
       }
     }
   </section>
+
+  @if (profile && profile.id === currentUserId) {
+    <section class="member-record-requests">
+      <h3>Övvizsga vagy edzőtábor beküldése</h3>
+      <p class="request-hint">A beküldött adat admin jóváhagyás után jelenik meg a profilodon.</p>
+
+      @if (recordRequestMessage) {
+        <div class="request-message" [class.error]="recordRequestError">{{ recordRequestMessage }}</div>
+      }
+
+      <label for="recordRequestType">Adattípus</label>
+      <select id="recordRequestType" [(ngModel)]="newRecordRequestType" name="recordRequestType">
+        <option value="belt_exam">Övvizsga</option>
+        <option value="training_camp">Edzőtábor</option>
+      </select>
+
+      <label>Dátum</label>
+      <app-date-selector [(ngModel)]="newRecordDate" name="recordEventDate" />
+
+      @if (newRecordRequestType === 'belt_exam') {
+        <label for="recordBeltRank">Vizsga utáni övfokozat</label>
+        <select id="recordBeltRank" [(ngModel)]="newRecordBeltRank" name="recordBeltRank">
+          @for (rank of beltRanks; track rank) {
+            <option [value]="rank">{{ rank }}</option>
+          }
+        </select>
+      } @else {
+        <label for="recordDescription">Megjegyzés (nem kötelező)</label>
+        <input id="recordDescription" type="text" [(ngModel)]="newRecordDescription" name="recordDescription" maxlength="200" />
+      }
+
+      <button type="button" class="submit-record-request" (click)="submitMemberRecordRequest()" [disabled]="!newRecordDate || submittingRecordRequest">
+        <span class="material-icons">send</span>
+        {{ submittingRecordRequest ? 'Beküldés...' : 'Beküldés jóváhagyásra' }}
+      </button>
+
+      @if (memberRecordRequests.length > 0) {
+        <div class="member-request-history">
+          <h4>Beküldéseim</h4>
+          @for (request of memberRecordRequests; track request.id) {
+            <div class="member-request-row">
+              <span>{{ recordRequestTypeLabel(request.request_type) }} · {{ formatDate(request.event_date) }}{{ request.belt_rank ? ' · ' + request.belt_rank : '' }}</span>
+              <strong [class.pending]="request.status === 'pending'" [class.rejected]="request.status === 'rejected'">{{ recordRequestStatusLabel(request.status) }}</strong>
+              @if (request.review_note) {
+                <small>{{ request.review_note }}</small>
+              }
+            </div>
+          }
+        </div>
+      }
+    </section>
+  }
+
+  @if ((!isViewingOther && currentUserId) || (isViewingOther && canEditMemberDetails)) {
+    <section class="admin-details-panel birthday-panel">
+      <h3 class="panel-title">
+        <span class="material-icons">cake</span>
+        Születési dátum
+      </h3>
+      @if (birthDateSaveMsg) {
+        <div class="save-msg" [class.error]="birthDateSaveError">
+          <span class="material-icons">{{ birthDateSaveError ? 'error' : 'check_circle' }}</span>
+          {{ birthDateSaveMsg }}
+        </div>
+      }
+      <app-date-selector [(ngModel)]="editBirthDate" name="birthDate" />
+      <button class="btn-save-admin" (click)="saveBirthDate()" [disabled]="savingBirthDate">
+        <span class="material-icons">save</span>
+        {{ savingBirthDate ? 'Mentés...' : 'Születési dátum mentése' }}
+      </button>
+    </section>
+  }
 
   @if (isFullAdmin) {
     <nav class="bottom-nav">

@@ -1,0 +1,27 @@
+<div class="date-selector">
+  <div class="date-parts">
+    <select aria-label="Nap" [ngModel]="day" (ngModelChange)="updatePart('day', $event)" [disabled]="disabled">
+      <option [ngValue]="null">Nap</option>
+      @for (value of days; track value) {
+        <option [ngValue]="value">{{ value }}</option>
+      }
+    </select>
+    <select aria-label="Hónap" [ngModel]="month" (ngModelChange)="updatePart('month', $event)" [disabled]="disabled">
+      <option [ngValue]="null">Hónap</option>
+      @for (value of months; track value; let index = $index) {
+        <option [ngValue]="index + 1">{{ value }}</option>
+      }
+    </select>
+    <select aria-label="Év" [ngModel]="year" (ngModelChange)="updatePart('year', $event)" [disabled]="disabled">
+      <option [ngValue]="null">Év</option>
+      @for (value of years; track value) {
+        <option [ngValue]="value">{{ value }}</option>
+      }
+    </select>
+  </div>
+  @if (hasValue && !disabled) {
+    <button type="button" class="clear-date" aria-label="Születési dátum törlése" title="Dátum törlése" (click)="clear()">
+      <span class="material-icons">close</span>
+    </button>
+  }
+</div>

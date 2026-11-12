@@ -1,0 +1,57 @@
+:host {
+  display: block;
+  width: 100%;
+}
+
+.date-selector,
+.date-parts {
+  display: grid;
+  align-items: center;
+  gap: 8px;
+}
+
+.date-selector {
+  grid-template-columns: minmax(0, 1fr) 36px;
+}
+
+.date-parts {
+  grid-template-columns: 0.8fr 1.5fr 1fr;
+}
+
+select {
+  min-width: 0;
+  width: 100%;
+  height: 42px;
+  padding: 0 8px;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background: var(--bg);
+  color: var(--text);
+  font: 13px 'Lexend', sans-serif;
+}
+
+select:focus-visible,
+.clear-date:focus-visible {
+  outline: 2px solid #4a6cf7;
+  outline-offset: 2px;
+}
+
+select:disabled {
+  opacity: 0.6;
+}
+
+.clear-date {
+  display: grid;
+  place-items: center;
+  width: 36px;
+  height: 36px;
+  padding: 0;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background: var(--surface);
+  color: var(--text-muted);
+}
+
+.clear-date .material-icons {
+  font-size: 18px;
+}

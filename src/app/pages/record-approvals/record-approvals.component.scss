@@ -1,0 +1,120 @@
+.approvals-page {
+  min-height: 100vh;
+  padding: 68px 16px 32px;
+  background: var(--bg);
+  color: var(--text);
+  font-family: 'Lexend', sans-serif;
+}
+
+.header {
+  max-width: 760px;
+  margin: 0 auto 20px;
+  display: grid;
+  grid-template-columns: 40px minmax(0, 1fr) 36px;
+  align-items: center;
+  gap: 10px;
+
+  h1 { font-size: 18px; line-height: 1.3; }
+}
+
+.back-btn {
+  display: grid;
+  place-items: center;
+  width: 40px;
+  height: 40px;
+  color: var(--text-sub);
+}
+
+.pending-count {
+  display: grid;
+  place-items: center;
+  width: 30px;
+  height: 30px;
+  border-radius: 50%;
+  background: rgba(245, 158, 11, 0.14);
+  color: #f59e0b;
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.request-list {
+  max-width: 760px;
+  margin: 0 auto;
+  display: grid;
+  gap: 12px;
+}
+
+.request-item {
+  padding: 16px;
+  border: 1px solid var(--border-sub);
+  border-radius: 10px;
+  background: var(--surface);
+
+  label { display: block; margin: 14px 0 6px; color: var(--text-muted); font-size: 12px; }
+  textarea {
+    display: block;
+    width: 100%;
+    resize: vertical;
+    padding: 10px;
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    background: var(--bg);
+    color: var(--text);
+    font: 13px 'Lexend', sans-serif;
+  }
+}
+
+.request-heading {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 12px;
+  h2 { font-size: 15px; }
+  p { margin-top: 4px; color: var(--text-sub); font-size: 13px; }
+  .type-icon { color: #4a6cf7; }
+}
+
+.request-detail { margin-top: 10px; color: var(--text-sub); font-size: 13px; }
+.submitted-at { margin-top: 10px; color: var(--text-muted); font-size: 11px; }
+
+.review-actions {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+  margin-top: 12px;
+
+  button {
+    min-height: 42px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    border: 1px solid transparent;
+    border-radius: 8px;
+    color: white;
+    font-size: 13px;
+    font-weight: 600;
+    .material-icons { font-size: 18px; }
+    &:disabled { opacity: 0.55; cursor: wait; }
+  }
+
+  .reject-btn { background: #b42332; }
+  .approve-btn { background: #14804a; }
+}
+
+.status-message {
+  color: #14804a;
+  font-size: 13px;
+  &.error { color: #b42332; }
+}
+
+.empty-state {
+  min-height: 180px;
+  display: grid;
+  place-content: center;
+  justify-items: center;
+  gap: 10px;
+  color: var(--text-muted);
+  font-size: 13px;
+  .material-icons { font-size: 32px; }
+}

@@ -1,0 +1,64 @@
+<main class="approvals-page">
+  <header class="header">
+    <a routerLink="/membership-card" class="back-btn" aria-label="Vissza a profilhoz">
+      <span class="material-icons">arrow_back</span>
+    </a>
+    <h1>Adatbeküldések jóváhagyása</h1>
+    <span class="pending-count">{{ requests.length }}</span>
+  </header>
+
+  <section class="request-list" aria-live="polite">
+    @if (statusMessage) {
+      <p class="status-message" [class.error]="statusError">{{ statusMessage }}</p>
+    }
+
+    @if (loading) {
+      <p class="empty-state">Betöltés...</p>
+    } @else if (requests.length === 0) {
+      <div class="empty-state">
+        <span class="material-icons">task_alt</span>
+        <p>Nincs jóváhagyásra váró beküldés.</p>
+      </div>
+    } @else {
+      @for (request of requests; track request.id) {
+        <article class="request-item">
+          <div class="request-heading">
+            <div>
+              <h2>{{ request.profiles?.full_name || 'Ismeretlen tag' }}</h2>
+              <p>{{ requestTypeLabel(request.request_type) }} · {{ request.event_date | date:'yyyy. MM. dd.' }}</p>
+            </div>
+            <span class="type-icon material-icons">{{ request.request_type === 'belt_exam' ? 'military_tech' : 'terrain' }}</span>
+          </div>
+
+          @if (request.belt_rank) {
+            <p class="request-detail">Övfokozat: <strong>{{ request.belt_rank }}</strong></p>
+          }
+          @if (request.description) {
+            <p class="request-detail">{{ request.description }}</p>
+          }
+          <p class="submitted-at">Beküldve: {{ request.created_at | date:'yyyy. MM. dd. HH:mm' }}</p>
+
+          <label [for]="'review-note-' + request.id">Megjegyzés (elutasításnál indoklás)</label>
+          <textarea
+            [id]="'review-note-' + request.id"
+            [(ngModel)]="reviewNotes[request.id]"
+            [name]="'review-note-' + request.id"
+            maxlength="500"
+            rows="2"
+          ></textarea>
+
+          <div class="review-actions">
+            <button type="button" class="reject-btn" (click)="reviewRequest(request, false)" [disabled]="!!reviewingId">
+              <span class="material-icons">close</span>
+              Elutasítás
+            </button>
+            <button type="button" class="approve-btn" (click)="reviewRequest(request, true)" [disabled]="!!reviewingId">
+              <span class="material-icons">check</span>
+              {{ reviewingId === request.id ? 'Mentés...' : 'Jóváhagyás' }}
+            </button>
+          </div>
+        </article>
+      }
+    }
+  </section>
+</main>
