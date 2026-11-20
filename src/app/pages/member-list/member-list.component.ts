@@ -112,6 +112,23 @@ export class MemberListComponent implements OnInit {
     this.members = this.members.map(m => m.id === member.id ? { ...m, is_disabled: true } : m);
   }
 
+  async reactivateMember(member: Profile & { status: string }, event: MouseEvent) {
+    event.stopPropagation();
+    if (!this.isFullAdmin || !member.is_disabled) return;
+    if (!confirm(`Biztosan újraaktiválod ezt a felhasználót: ${member.full_name}?`)) return;
+
+    this.memberActionBusyId = member.id;
+    const { error } = await this.supabase.reactivateUser(member.id);
+    this.memberActionBusyId = null;
+
+    if (error) {
+      alert(error.message || 'Nem sikerült újraaktiválni a felhasználót.');
+      return;
+    }
+
+    this.members = this.members.map(m => m.id === member.id ? { ...m, is_disabled: false, deleted_at: null } : m);
+  }
+
   async sendResetEmail(member: Profile & { status: string }, event: MouseEvent) {
     event.stopPropagation();
     if (!this.isFullAdmin) return;

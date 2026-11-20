@@ -716,6 +716,12 @@
     }
   }
 
+  .btn-reactivate {
+    border-color: #14804a;
+    background: rgba(20, 128, 74, 0.12);
+    color: #14804a;
+  }
+
   .auth-actions {
     display: grid;
     gap: 10px;

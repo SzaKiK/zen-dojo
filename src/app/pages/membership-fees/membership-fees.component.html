@@ -73,16 +73,23 @@
         <div class="member-row table-heading" role="row">
           <span role="columnheader">Tag</span>
           <span role="columnheader">Övfokozat</span>
-          <span role="columnheader">Befizetés</span>
+          @for (season of seasons; track season.startYear) {
+            <span class="season-column" [class.current-season-column]="season.current" role="columnheader">
+              {{ season.label }}
+              @if (season.current) { <small>Aktuális</small> }
+            </span>
+          }
         </div>
         @for (member of filteredMembers; track member.id) {
           <div class="member-row" role="row">
             <span class="member-name" role="cell">{{ member.full_name }} @if (member.is_disabled) { <small>Inaktív</small> }</span>
             <span class="belt-rank" role="cell">{{ member.belt_rank || '—' }}</span>
-            <span class="payment-status" [class.paid]="member.paidBySeason[selectedSeasonStartYear]" [class.unpaid]="!member.paidBySeason[selectedSeasonStartYear]" role="cell">
-              <span class="status-dot"></span>
-              {{ member.paidBySeason[selectedSeasonStartYear] ? 'Fizetve' : 'Nem fizetve' }}
-            </span>
+            @for (season of seasons; track season.startYear) {
+              <span class="payment-status" [class.paid]="member.paidBySeason[season.startYear]" [class.unpaid]="!member.paidBySeason[season.startYear]" role="cell">
+                <span class="status-dot"></span>
+                {{ member.paidBySeason[season.startYear] ? 'Fizetve' : 'Nem fizetve' }}
+              </span>
+            }
           </div>
         } @empty {
           <p class="empty-state">Nincs a szűrésnek megfelelő tag.</p>

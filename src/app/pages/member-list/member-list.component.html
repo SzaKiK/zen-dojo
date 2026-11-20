@@ -103,6 +103,17 @@
               >
                 <span class="material-icons">person_off</span>
               </button>
+              @if (member.is_disabled) {
+                <button
+                  class="action-btn reactivate"
+                  type="button"
+                  (click)="reactivateMember(member, $event)"
+                  [disabled]="memberActionBusyId === member.id"
+                  title="Felhasználó újraaktiválása"
+                >
+                  <span class="material-icons">person_add</span>
+                </button>
+              }
               <button
                 class="action-btn hard"
                 type="button"

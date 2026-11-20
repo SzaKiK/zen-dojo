@@ -150,17 +150,21 @@
   span { font-size: 10px; font-weight: 700; }
 }
 
-.member-table { width: 100%; }
+.member-table { width: 100%; overflow-x: auto; }
 .member-row {
   min-height: 48px;
   display: grid;
-  grid-template-columns: minmax(0, 2fr) minmax(90px, 1fr) minmax(120px, 1fr);
+  grid-template-columns: minmax(150px, 1.8fr) minmax(70px, 0.7fr) repeat(3, minmax(110px, 1fr));
+  min-width: 680px;
   align-items: center;
   gap: 10px;
   border-top: 1px solid var(--border-light);
   font-size: 12px;
 }
-.table-heading { min-height: 34px; border-top: 0; color: var(--text-muted); font-size: 10px; font-weight: 600; text-transform: uppercase; }
+.table-heading { min-height: 42px; border-top: 0; color: var(--text-muted); font-size: 10px; font-weight: 600; text-transform: uppercase; }
+.season-column { display: flex; flex-direction: column; gap: 3px; }
+.season-column small { color: #14804a; font-size: 9px; text-transform: none; }
+.current-season-column { color: #14804a; }
 .member-name { min-width: 0; font-weight: 600; overflow-wrap: anywhere; small { display: block; margin-top: 3px; color: #b45309; font-size: 10px; font-weight: 500; } }
 .belt-rank { color: var(--text-muted); }
 .payment-status { display: inline-flex; align-items: center; gap: 7px; font-weight: 600; }
@@ -186,6 +190,6 @@
   .list-header { align-items: stretch; flex-direction: column; }
   .search-box { width: 100%; }
   .status-filters button { padding: 0 7px; font-size: 10px; }
-  .member-row { grid-template-columns: minmax(0, 1.5fr) minmax(56px, 0.7fr) minmax(98px, 1fr); gap: 6px; font-size: 11px; }
+  .member-row { grid-template-columns: minmax(130px, 1.5fr) minmax(56px, 0.7fr) repeat(3, minmax(100px, 1fr)); min-width: 620px; gap: 6px; font-size: 11px; }
   .table-heading { font-size: 9px; }
 }

@@ -332,6 +332,22 @@ export class MembershipCardComponent implements OnInit {
     this.showAuthMsg('Fiók inaktiválva (soft delete).', 'success');
   }
 
+  async reactivateViewedUser() {
+    if (!this.profile || !this.canManageAuthAccount || !this.profile.is_disabled) return;
+    if (!confirm(`Biztosan újraaktiválod: ${this.profile.full_name}?`)) return;
+
+    this.authActionBusy = true;
+    const { error } = await this.supabase.reactivateUser(this.profile.id);
+    this.authActionBusy = false;
+    if (error) {
+      this.showAuthMsg(error.message || 'Újraaktiválás sikertelen.', 'error');
+      return;
+    }
+
+    this.profile = { ...this.profile, is_disabled: false, deleted_at: null };
+    this.showAuthMsg('Fiók újraaktiválva.', 'success');
+  }
+
   async hardDeleteViewedUser() {
     if (!this.profile || !this.canManageAuthAccount) return;
     const verification = prompt(`Végleges törlés: ${this.profile.full_name}\nÍrd be: TORLES`);

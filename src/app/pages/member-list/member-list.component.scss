@@ -136,6 +136,12 @@
           color: #d97706;
         }
 
+        &.reactivate {
+          border-color: rgba(20, 128, 74, 0.4);
+          background: rgba(20, 128, 74, 0.12);
+          color: #14804a;
+        }
+
         &.hard {
           border-color: rgba(239, 68, 68, 0.4);
           background: rgba(239, 68, 68, 0.12);

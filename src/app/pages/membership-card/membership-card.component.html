@@ -200,10 +200,17 @@
         </div>
 
         <div class="danger-zone">
-          <button class="btn-danger soft" (click)="softDeleteViewedUser()" [disabled]="authActionBusy || profile?.is_disabled">
-            <span class="material-icons">person_off</span>
-            Soft delete (inaktiválás)
-          </button>
+          @if (profile?.is_disabled) {
+            <button class="btn-secondary btn-reactivate" (click)="reactivateViewedUser()" [disabled]="authActionBusy">
+              <span class="material-icons">person_add</span>
+              {{ authActionBusy ? 'Folyamatban...' : 'Tag újraaktiválása' }}
+            </button>
+          } @else {
+            <button class="btn-danger soft" (click)="softDeleteViewedUser()" [disabled]="authActionBusy">
+              <span class="material-icons">person_off</span>
+              Soft delete (inaktiválás)
+            </button>
+          }
           <button class="btn-danger hard" (click)="hardDeleteViewedUser()" [disabled]="authActionBusy">
             <span class="material-icons">delete_forever</span>
             Hard delete (végleges törlés)

@@ -240,17 +240,12 @@ export class AuditLogComponent implements OnInit {
     this.exporting = 'members';
     this.exportError = '';
     try {
-      const data = await this.supabase.getAllMembersForExport();
-      const rows = (data as any[]).map(p => ({
-        'Név': p.full_name,
-        'Öv fokozat': p.belt_rank ?? '',
-        'Telefon': p.phone ?? '',
-        'Születési dátum': p.birth_date ?? '',
-        'Orvosi érvényessége': p.medical_validity ?? '',
-        'Tagdíj fizetve (régi naptári éves adat)': p.membership_fee_paid ? 'Igen' : 'Nem',
-        'Szerepkör': p.admin_role ?? 'tanuló',
-        'Regisztrálva': this.fmtDate(p.created_at),
-      }));
+      const [members, memberships, feeSeasons] = await Promise.all([
+        this.supabase.getAllMembersForExport(),
+        this.supabase.getAllMemberships(),
+        this.supabase.getAllMembershipFeeSeasons(this.membershipFeeSeasonStarts().map(season => season.startYear)),
+      ]);
+      const rows = this.memberExportRows(members, memberships, feeSeasons);
       this.downloadExcel([{ name: 'Tagok', rows }], 'dhkse_tagok');
     } catch (e: any) {
       this.exportError = e?.message ?? 'Export hiba';
@@ -372,22 +367,14 @@ export class AuditLogComponent implements OnInit {
     this.exporting = 'summary';
     this.exportError = '';
     try {
-      const [members, memberships, auditLogs] = await Promise.all([
+      const [members, memberships, auditLogs, feeSeasons] = await Promise.all([
         this.supabase.getAllMembersForExport(),
         this.supabase.getAllMembershipsForExport(),
         this.supabase.getAllAuditLogsForExport(),
+        this.supabase.getAllMembershipFeeSeasons(this.membershipFeeSeasonStarts().map(season => season.startYear)),
       ]);
 
-      const memberRows = (members as any[]).map(p => ({
-        'Név': p.full_name,
-        'Öv fokozat': p.belt_rank ?? '',
-        'Telefon': p.phone ?? '',
-        'Születési dátum': p.birth_date ?? '',
-        'Orvosi érvényessége': p.medical_validity ?? '',
-        'Tagdíj fizetve (régi naptári éves adat)': p.membership_fee_paid ? 'Igen' : 'Nem',
-        'Szerepkör': p.admin_role ?? 'tanuló',
-        'Regisztrálva': this.fmtDate(p.created_at),
-      }));
+      const memberRows = this.memberExportRows(members, memberships, feeSeasons);
 
       const membershipRows = (memberships as any[]).map(m => ({
         'Tag neve': (m.profiles as any)?.full_name ?? '',
@@ -446,6 +433,54 @@ export class AuditLogComponent implements OnInit {
     } finally {
       this.exporting = null;
     }
+  }
+
+  private memberExportRows(members: any[], memberships: any[], feeSeasons: any[]): any[] {
+    const seasons = this.membershipFeeSeasonStarts();
+    const latestMembershipByUser = new Map<string, string>();
+    for (const membership of memberships as any[]) {
+      if (!latestMembershipByUser.has(membership.user_id)) {
+        latestMembershipByUser.set(membership.user_id, membership.status);
+      }
+    }
+    const feesByUser = new Map<string, Map<number, boolean>>();
+    for (const fee of feeSeasons as any[]) {
+      if (!feesByUser.has(fee.user_id)) feesByUser.set(fee.user_id, new Map());
+      feesByUser.get(fee.user_id)!.set(fee.season_start_year, fee.paid);
+    }
+
+    return (members as any[]).map(profile => {
+      const savedFees = feesByUser.get(profile.id);
+      const row: Record<string, string> = {
+        'Név': profile.full_name,
+        'Öv fokozat': profile.belt_rank ?? '',
+        'Fiók státusz': profile.is_disabled ? 'Inaktív' : 'Aktív',
+        'Bérlet státusz': latestMembershipByUser.has(profile.id)
+          ? latestMembershipByUser.get(profile.id) === 'active' ? 'Aktív' : 'Lejárt'
+          : 'Nincs bérlet',
+        'Telefon': profile.phone ?? '',
+        'Születési dátum': profile.birth_date ?? '',
+        'Orvosi érvényessége': profile.medical_validity ?? '',
+        'Szerepkör': profile.admin_role ?? 'tanuló',
+        'Regisztrálva': this.fmtDate(profile.created_at),
+      };
+      for (const season of seasons) {
+        const paid = savedFees?.has(season.startYear)
+          ? savedFees.get(season.startYear)!
+          : season.current && !!profile.membership_fee_paid;
+        row[season.label] = paid ? 'Fizetve' : 'Nem fizetve';
+      }
+      return row;
+    });
+  }
+
+  private membershipFeeSeasonStarts(): { startYear: number; label: string; current: boolean }[] {
+    const now = new Date();
+    const currentStartYear = now.getMonth() >= 8 ? now.getFullYear() : now.getFullYear() - 1;
+    return [-1, 0, 1].map(offset => {
+      const startYear = currentStartYear + offset;
+      return { startYear, label: `${startYear}/${startYear + 1}`, current: offset === 0 };
+    });
   }
 
   private downloadExcel(sheets: { name: string; rows: any[] }[], filename: string) {

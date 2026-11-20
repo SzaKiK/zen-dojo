@@ -447,7 +447,7 @@ export class SupabaseService {
     if (this.isMockMode) return [];
     const { data } = await this.supabase!
       .from('profiles')
-      .select('id, full_name, belt_rank, belt_level, phone, birth_date, medical_validity, membership_fee_paid, admin_role, created_at')
+      .select('id, full_name, belt_rank, belt_level, phone, birth_date, medical_validity, membership_fee_paid, admin_role, is_disabled, deleted_at, created_at')
       .order('full_name');
     return data ?? [];
   }
@@ -456,7 +456,7 @@ export class SupabaseService {
     if (this.isMockMode) return [];
     const { data } = await this.supabase!
       .from('memberships')
-      .select('id, type, status, total_sessions, remaining_sessions, valid_until, created_at, updated_at, profiles!memberships_user_id_fkey(full_name)')
+      .select('id, user_id, type, status, total_sessions, remaining_sessions, valid_until, created_at, updated_at, profiles!memberships_user_id_fkey(full_name)')
       .order('created_at', { ascending: false });
     return data ?? [];
   }
@@ -518,6 +518,16 @@ export class SupabaseService {
     const { data, error } = await this.supabase!.rpc('admin_soft_delete_user', {
       p_target_user_id: userId,
       p_reason: reason ?? null,
+    });
+    if (error) return { error: { message: error.message } };
+    if (data?.error) return { error: { message: data.error } };
+    return { error: null, data };
+  }
+
+  async reactivateUser(userId: string) {
+    if (this.isMockMode) return { error: null };
+    const { data, error } = await this.supabase!.rpc('admin_reactivate_user', {
+      p_target_user_id: userId,
     });
     if (error) return { error: { message: error.message } };
     if (data?.error) return { error: { message: data.error } };
